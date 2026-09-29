@@ -42,6 +42,15 @@ Route::get('/portfolio', function () {
 Route::get('/contact', function () {
     return view('mcb-ui.contact');
 });
+Route::get('/blog', function () {
+    return view('mcb-ui.blog');
+});
+
+Route::get('/api/news', [NewsController::class, 'index']);
+
+Route::get('/single', function () {
+    return view('mcb-ui.single');
+});
 
 // Rute Dashboard: Hanya bisa diakses jika sudah login
 Route::get('/dashboard', function () {

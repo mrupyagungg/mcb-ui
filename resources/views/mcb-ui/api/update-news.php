@@ -2,19 +2,11 @@
 
 date_default_timezone_set('Asia/Jakarta');
 
-/*
-|--------------------------------------------------------------------------
-| Konfigurasi
-|--------------------------------------------------------------------------
-*/
-
 $rssFeeds = [
-
     [
         "url" => "https://www.antaranews.com/rss/terkini.xml",
         "source" => "ANTARA"
     ]
-
 ];
 
 $keywords = [
@@ -36,27 +28,21 @@ $keywords = [
     "jaringan"
 ];
 
-$defaultImage = "img/blog-default.jpg";
+$defaultImage = "/img/blog-default.jpg";
 
 $news = [];
 
-/*
-|--------------------------------------------------------------------------
-| Fungsi Ambil Gambar RSS
-|--------------------------------------------------------------------------
-*/
-
 function getImage(SimpleXMLElement $item, string $defaultImage): string
 {
-    // enclosure
     if (isset($item->enclosure)) {
-        $url = (string)$item->enclosure['url'];
+
+        $url = (string) $item->enclosure['url'];
+
         if (!empty($url)) {
             return $url;
         }
     }
 
-    // media namespace
     $media = $item->children('media', true);
 
     if ($media) {
@@ -68,11 +54,9 @@ function getImage(SimpleXMLElement $item, string $defaultImage): string
                 $attr = $content->attributes();
 
                 if (!empty($attr['url'])) {
-                    return (string)$attr['url'];
+                    return (string) $attr['url'];
                 }
-
             }
-
         }
 
         if (isset($media->thumbnail)) {
@@ -82,31 +66,20 @@ function getImage(SimpleXMLElement $item, string $defaultImage): string
                 $attr = $thumb->attributes();
 
                 if (!empty($attr['url'])) {
-                    return (string)$attr['url'];
+                    return (string) $attr['url'];
                 }
-
             }
-
         }
-
     }
 
     return $defaultImage;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Fungsi Kategori
-|--------------------------------------------------------------------------
-*/
-
 function getCategory(string $title): string
 {
     $title = strtolower($title);
 
-    if (
-        str_contains($title, "pln")
-    ) {
+    if (str_contains($title, "pln")) {
         return "Electrical";
     }
 
@@ -129,128 +102,152 @@ function getCategory(string $title): string
         return "Infrastructure";
     }
 
-    if (
-        str_contains($title, "smart city")
-    ) {
+    if (str_contains($title, "smart city")) {
         return "Smart City";
     }
 
     return "News";
 }
 
-/*
-|--------------------------------------------------------------------------
-| Baca Semua RSS
-|--------------------------------------------------------------------------
-*/
-
 foreach ($rssFeeds as $feed) {
 
-    $xml = @simplexml_load_file($feed["url"]);
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 15,
+            'user_agent' => 'Mozilla/5.0'
+        ]
+    ]);
+
+    $xmlContent = @file_get_contents(
+        $feed["url"],
+        false,
+        $context
+    );
+
+    if ($xmlContent === false) {
+        continue;
+    }
+
+    $xml = @simplexml_load_string($xmlContent);
 
     if (!$xml) {
         continue;
     }
 
+    if (!isset($xml->channel->item)) {
+        continue;
+    }
+
     foreach ($xml->channel->item as $item) {
 
-        $title = trim((string)$item->title);
+        $title = trim((string) $item->title);
 
-        $description = trim(strip_tags((string)$item->description));
+        $description = trim(
+            strip_tags((string) $item->description)
+        );
 
-        $text = strtolower($title . " " . $description);
+        $text = strtolower(
+            $title . " " . $description
+        );
 
         $found = false;
 
         foreach ($keywords as $keyword) {
 
-            if (strpos($text, strtolower($keyword)) !== false) {
-
+            if (
+                strpos(
+                    $text,
+                    strtolower($keyword)
+                ) !== false
+            ) {
                 $found = true;
                 break;
-
             }
-
         }
 
         if (!$found) {
             continue;
         }
 
+        $pubDate = strtotime(
+            (string) $item->pubDate
+        );
+
         $news[] = [
 
             "title" => $title,
 
-            "description" => mb_substr($description, 0, 180) . "...",
+            "description" => mb_substr(
+                $description,
+                0,
+                180
+            ) . "...",
 
-            "image" => getImage($item, $defaultImage),
-
-            "date" => date(
-                "Y-m-d H:i:s",
-                strtotime((string)$item->pubDate)
+            "image" => getImage(
+                $item,
+                $defaultImage
             ),
+
+            "date" => $pubDate
+                ? date("Y-m-d H:i:s", $pubDate)
+                : date("Y-m-d H:i:s"),
 
             "category" => getCategory($title),
 
-            "url" => (string)$item->link,
+            "url" => (string) $item->link,
 
             "source" => $feed["source"]
-
         ];
-
     }
-
 }
-
-/*
-|--------------------------------------------------------------------------
-| Hapus Duplikat
-|--------------------------------------------------------------------------
-*/
 
 $temp = [];
 $result = [];
 
 foreach ($news as $item) {
 
+    if (empty($item["url"])) {
+        continue;
+    }
+
     if (!isset($temp[$item["url"]])) {
 
         $temp[$item["url"]] = true;
+
         $result[] = $item;
-
     }
-
 }
-
-/*
-|--------------------------------------------------------------------------
-| Urutkan Terbaru
-|--------------------------------------------------------------------------
-*/
 
 usort($result, function ($a, $b) {
 
-    return strtotime($b["date"]) <=> strtotime($a["date"]);
+    return strtotime($b["date"])
+        <=> strtotime($a["date"]);
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| Maksimal 20 Berita
-|--------------------------------------------------------------------------
-*/
-
 $result = array_slice($result, 0, 20);
 
-/*
-|--------------------------------------------------------------------------
-| Simpan Cache
-|--------------------------------------------------------------------------
-*/
+$cacheDirectory = __DIR__ . "/cache";
+
+if (!is_dir($cacheDirectory)) {
+
+    mkdir(
+        $cacheDirectory,
+        0755,
+        true
+    );
+}
 
 file_put_contents(
-    __DIR__ . "/../cache/news.json",
-    json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+    $cacheDirectory . "/news.json",
+    json_encode(
+        $result,
+        JSON_PRETTY_PRINT |
+        JSON_UNESCAPED_UNICODE |
+        JSON_UNESCAPED_SLASHES
+    )
 );
 
-echo "Berhasil update " . count($result) . " berita.";
+echo "Berhasil update " .
+    count($result) .
+    " berita.";

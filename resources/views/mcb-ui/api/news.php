@@ -1,15 +1,23 @@
 <?php
 
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=UTF-8");
 
-$file = __DIR__ . "/../cache/news.json";
+$file = __DIR__ . "/cache/news.json";
 
 if (!file_exists($file)) {
 
-    echo "[]";
+    echo json_encode([]);
 
     exit;
-
 }
 
-echo file_get_contents($file);
+$content = file_get_contents($file);
+
+if ($content === false || empty($content)) {
+
+    echo json_encode([]);
+
+    exit;
+}
+
+echo $content;
