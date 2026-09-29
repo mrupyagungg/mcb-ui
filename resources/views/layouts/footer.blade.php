@@ -5,16 +5,10 @@
             <div class="col-md-6 col-lg-3">
                 <div class="footer-contact">
                     <h2>Office Contact</h2>
-                    <p><i class="fa fa-map-marker-alt"></i> Ruko Amara Residence No. A-15</p>
-                    <p><i class="fa fa-phone-alt"></i>0213889170</p>
-                    <p><i class="fa fa-envelope"></i>megantaracipta.b@gmail.com</p>
-                    <!-- <div class="footer-social">
-                                <a href=""><i class="fab fa-twitter"></i></a>
-                                <a href=""><i class="fab fa-facebook-f"></i></a>
-                                <a href=""><i class="fab fa-youtube"></i></a>
-                                <a href=""><i class="fab fa-instagram"></i></a>
-                                <a href=""><i class="fab fa-linkedin-in"></i></a>
-                            </div> -->
+                    <p><i class="fa fa-map-marker-alt"></i> Ruko Amara Residence No. A-15 <br> Jl. Abdul Wahab,
+                        Cinangka, Kec. Sawangan, Kota Depok, Jawa Barat 16516</p>
+                    <p><i class="fa fa-phone-alt"></i>(021)38891870</p>
+                    <p><i class="fa fa-envelope"></i>megantaraciptabersaudara@gmail.com</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
