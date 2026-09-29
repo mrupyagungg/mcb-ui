@@ -1,6 +1,8 @@
 @extends('layouts.dash')
 
 @section('content')
+    <!-- Top Bar Start -->
+
 
     <!-- Carousel Start -->
     <div id="carousel" class="carousel slide" data-ride="carousel">
@@ -394,7 +396,6 @@
         }
     </style>
     <!-- Service End -->
-
     <!-- map indonesia start -->
     <section style="background: #0f0f0f; padding: 80px 0;">
         <div class="container">
@@ -483,16 +484,10 @@
                 { nama: "Project Madiun", kota: "Madiun", lat: -7.6298, lng: 111.5239, color: "#2ec4b6" },
                 { nama: "Project Blitar", kota: "Blitar", lat: -8.0955, lng: 112.1608, color: "#ffb703" },
                 { nama: "Project Cirebon", kota: "Cirebon", lat: -6.7063, lng: 108.5570, color: "#8d99ae" },
-                { nama: "Project Kediri", kota: "Kediri", lat: -7.8480, lng: 112.0178, color: "#ff8fab" },
-                { nama: "Project Madiun", kota: "Madiun", lat: -7.6298, lng: 111.5239, color: "#2ec4b6" },
-                { nama: "Project Blitar", kota: "Blitar", lat: -8.0955, lng: 112.1608, color: "#ffb703" },
-                { nama: "Project Cirebon", kota: "Cirebon", lat: -6.7063, lng: 108.5570, color: "#8d99ae" },
                 { nama: "Project Subang", kota: "Subang", lat: -6.5719, lng: 107.7605, color: "#8338ec" },
-                { nama: "Project Purwakarta", kota: "Purwakarta", lat: -6.5569, lng: 107.4438, color: "#fb5607" },
                 { nama: "Project Jakarta Barat", kota: "Jakarta Barat", lat: -6.1683, lng: 106.7588, color: "#e63946" },
                 { nama: "Project Bogor", kota: "Bogor", lat: -6.5950, lng: 106.8167, color: "#06d6a0" },
                 { nama: "Project Karawang", kota: "Karawang", lat: -6.3054, lng: 107.2961, color: "#3a86ff" },
-                { nama: "Project Indramayu", kota: "Indramayu", lat: -6.3265, lng: 108.3207, color: "#ff006e" },
                 { nama: "Project Indramayu", kota: "Indramayu", lat: -6.3265, lng: 108.3207, color: "#ff006e" }
             ];
 
@@ -502,9 +497,10 @@
                 scrollWheelZoom: true
             }).setView([-2.5, 118], 5);
 
-            // Dark tile
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: ''
+            // Mengganti tile layer menggunakan OpenStreetMap standar yang diberi filter gelap via CSS atau menggunakan penyedia tile alternatif gratis tanpa API Key wajib
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
             }).addTo(map);
 
             let markersLayer = L.layerGroup().addTo(map);
@@ -522,15 +518,15 @@
                     });
 
                     marker.bindPopup(`
-                                                        <div style="min-width:200px;">
-                                                            <h4 style="margin:0 0 8px; font-size:16px; font-weight:700; color:#0f172a;">
-                                                                ${project.nama}
-                                                            </h4>
-                                                            <p style="margin:0; font-size:14px;">
-                                                                <strong>Kota:</strong> ${project.kota}
-                                                            </p>
-                                                        </div>
-                                                    `);
+                        <div style="min-width:200px;">
+                            <h4 style="margin:0 0 8px; font-size:16px; font-weight:700; color:#0f172a;">
+                                ${project.nama}
+                            </h4>
+                            <p style="margin:0; font-size:14px;">
+                                <strong>Kota:</strong> ${project.kota}
+                            </p>
+                        </div>
+                    `);
 
                     marker.addTo(markersLayer);
                 });
@@ -554,7 +550,6 @@
         </script>
     </section>
     <!-- map indonesia end -->
-
     <!-- Team Start -->
     <style>
         .team .row {
