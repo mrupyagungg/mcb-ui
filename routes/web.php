@@ -52,10 +52,6 @@ Route::get('/single', function () {
     return view('mcb-ui.single');
 });
 
-// Rute Dashboard: Hanya bisa diakses jika sudah login
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
