@@ -1,19 +1,23 @@
 @extends('adminlte::page')
 
-@section('title', 'DASHBOARD - ' . config('app.name'))
+@section('title', 'Dashboard Absensi - ' . config('app.name'))
 
 @section('content_header')
 <div class="container-fluid">
     <div class="row mb-2">
         <div class="col-sm-6">
             <h1 class="m-0 text-dark font-weight-bold">
-                Dashboard System
+                Dashboard Absensi
             </h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="#">Home</a></li>
-                <li class="breadcrumb-item active">Dashboard</li>
+                <li class="breadcrumb-item">
+                    <a href="#">Home</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    Dashboard
+                </li>
             </ol>
         </div>
     </div>
@@ -21,262 +25,352 @@
 @stop
 
 @section('content')
+
 <div class="container-fluid">
 
-    <!-- 1. Row Info Boxes / Stat Cards -->
-    <div class="row">
-        <!-- Card Total Document -->
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm rounded-lg border-0">
-                <span class="info-box-icon bg-info elevation-1 rounded-circle"><i class="fas fa-file-excel"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-muted">Total ATP Generated</span>
-                    <span class="info-box-number text-dark h4 mb-0 font-weight-bold">1,284</span>
+    {{-- Welcome --}}
+    <div class="card card-outline card-primary shadow-sm">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-1">
+                        Selamat datang,
+                        <strong>{{ auth()->user()->name }}</strong> 👋
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Silakan lakukan absensi sesuai jadwal kerja Anda.
+                    </p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Card ATP Distribusi -->
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm rounded-lg border-0">
-                <span class="info-box-icon bg-success elevation-1 rounded-circle"><i
-                        class="fas fa-network-wired"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-muted">ATP Distribusi (DS)</span>
-                    <span class="info-box-number text-dark h4 mb-0 font-weight-bold">842</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card ATP Subfeeder -->
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm rounded-lg border-0">
-                <span class="info-box-icon bg-primary elevation-1 rounded-circle"><i
-                        class="fas fa-project-diagram"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-muted">ATP Subfeeder (SF)</span>
-                    <span class="info-box-number text-dark h4 mb-0 font-weight-bold">442</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card Quick Action Link -->
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm rounded-lg border-0 bg-success text-white">
-                <div class="info-box-content">
-                    <span class="info-box-text">Aksi Cepat</span>
-                    <a href="{{ route('admin.cwatp') }}"
-                        class="btn btn-light btn-sm font-weight-bold mt-1 text-success shadow-xs">
-                        <i class="fas fa-plus-circle mr-1"></i> Form Bulk ATP
+                <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                    <a href="{{ route('employee.attendance') }}" class="btn btn-primary">
+                        <i class="fas fa-calendar-check mr-1"></i>
+                        Buka Absensi
                     </a>
                 </div>
-                <span class="info-box-icon"><i class="fas fa-cloud-upload-alt"></i></span>
             </div>
         </div>
     </div>
 
-    <!-- 2. Row Charts & Quick Actions -->
+    {{-- Statistik --}}
     <div class="row">
 
-        <!-- Quick Info Panel -->
-        <div class="col-lg-4">
-            <div class="card card-outline card-info shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-bottom-0">
-                    <h3 class="card-title font-weight-bold text-dark m-0">
-                        <i class="fas fa-info-circle text-info mr-2"></i>Panduan Sistem Generate CW ATP
+        {{-- Jam Masuk --}}
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3 id="dashboardJamMasuk">
+                        {{ isset($absensi) && $absensi?->jam_masuk ? $absensi->jam_masuk : '--:--' }}
+                    </h3>
+                    <p>Jam Masuk Hari Ini</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- Jam Keluar --}}
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3 id="dashboardJamKeluar">
+                        {{ isset($absensi) && $absensi?->jam_keluar ? $absensi->jam_keluar : '--:--' }}
+                    </h3>
+                    <p>Jam Keluar Hari Ini</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- Status --}}
+        <div class="col-lg-4 col-md-12">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+
+                    @if(isset($absensi) && $absensi?->jam_keluar)
+                        <h3>Selesai</h3>
+                        <p>Absensi Hari Ini</p>
+
+                    @elseif(isset($absensi) && $absensi?->jam_masuk)
+                        <h3>Aktif</h3>
+                        <p>Sedang Bekerja</p>
+
+                    @else
+                        <h3>Belum</h3>
+                        <p>Belum Absen Masuk</p>
+                    @endif
+
+                </div>
+
+                <div class="icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Skor Absensi Bulanan --}}
+    <div class="card card-outline {{ $scoreColor }} shadow-sm">
+
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-star mr-2"></i>
+                Skor Absensi Bulanan
+            </h3>
+
+            <div class="card-tools">
+                <span class="badge badge-light">
+                    {{ now()->translatedFormat('F Y') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row align-items-center">
+
+                {{-- Skor --}}
+                <div class="col-md-4 text-center border-right">
+
+                    <small class="text-muted d-block">
+                        TOTAL SKOR
+                    </small>
+
+                    <div class="mt-2">
+                        <span class="display-3 font-weight-bold text-{{ $scoreColor }}">
+                            {{ number_format($attendanceScore, 0) }}
+                        </span>
+
+                        <span class="text-muted font-weight-bold">
+                            / 100
+                        </span>
+                    </div>
+
+                    <div class="mt-2">
+                        @if($attendanceScore >= 70)
+
+                            <span class="badge badge-success p-2">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                Baik
+                            </span>
+
+                        @elseif($attendanceScore >= 50)
+
+                            <span class="badge badge-warning p-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Perlu Perhatian
+                            </span>
+
+                        @else
+
+                            <span class="badge badge-danger p-2">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                Rendah
+                            </span>
+
+                        @endif
+                    </div>
+
+                </div>
+
+                {{-- Kehadiran --}}
+                <div class="col-md-4 text-center border-right">
+
+                    <small class="text-muted d-block">
+                        KEHADIRAN
+                    </small>
+
+                    <h2 class="font-weight-bold mt-3 mb-1">
+                        {{ $attendancePresent }}
+                        <small class="text-muted">
+                            / {{ $attendanceWorkdays }}
+                        </small>
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Hari kerja
+                    </p>
+
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar bg-{{ $scoreColor }}" role="progressbar"
+                            style="width: {{ $attendanceScore }}%;">
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- Tidak Absen --}}
+                <div class="col-md-4 text-center">
+
+                    <small class="text-muted d-block">
+                        TIDAK HADIR / TIDAK ABSEN
+                    </small>
+
+                    <h2 class="text-danger font-weight-bold mt-3 mb-1">
+                        {{ $attendanceAbsent }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Hari kerja
+                    </p>
+
+                    @if($attendanceAbsent > 0)
+
+                        <small class="text-danger d-block mt-2">
+                            -{{ number_format($attendanceDeduction, 2) }}
+                            poin per hari
+                        </small>
+
+                    @else
+
+                        <small class="text-success d-block mt-2">
+                            <i class="fas fa-check-circle"></i>
+                            Tidak ada pengurangan
+                        </small>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-8">
+
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle mr-1"></i>
+
+                        Skor dihitung berdasarkan kehadiran pada hari kerja
+                        bulan {{ now()->translatedFormat('F Y') }}.
+                    </small>
+
+                </div>
+
+                <div class="col-md-4 text-md-right mt-2 mt-md-0">
+
+                    <a href="{{ route('employee.history') }}" class="btn btn-outline-secondary btn-sm">
+
+                        <i class="fas fa-history mr-1"></i>
+                        Lihat Riwayat
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {{-- Informasi --}}
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Informasi Absensi
                     </h3>
                 </div>
+
                 <div class="card-body">
-                    <div class="callout callout-success mb-3 bg-light">
-                        <h6 class="font-weight-bold text-success"><i class="fas fa-folder mr-1"></i> Format ZIP
-                            Distribusi</h6>
-                        <small class="text-secondary d-block">
-                            Pastikan ZIP memiliki folder <code>Impelemntasi</code>, <code>FDT</code>, dan folder FAT
-                            seperti <code>FAT_01</code>, <code>FAT_02</code>.
-                        </small>
-                    </div>
 
-                    <div class="callout callout-info mb-3 bg-light">
-                        <h6 class="font-weight-bold text-info"><i class="fas fa-folder mr-1"></i> Format ZIP Subfeeder
-                        </h6>
-                        <small class="text-secondary d-block">
-                            Pastikan ZIP memiliki folder <code>IMPLEMENTASI DS</code> dan <code>FDT</code>.
-                        </small>
-                    </div>
+                    <ul class="list-group list-group-flush">
 
-                    <div class="callout callout-warning mb-0 bg-light">
-                        <h6 class="font-weight-bold text-warning"><i class="fas fa-exclamation-triangle mr-1"></i> Batas
-                            Maksimum</h6>
-                        <small class="text-secondary d-block">
-                            Maksimal <strong>20 folder FAT/Section</strong> per sekali proses ekspor file Excel.
-                        </small>
-                    </div>
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-map-marker-alt text-danger mr-2"></i>
+                            Absensi menggunakan lokasi GPS.
+                        </li>
+
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-clock text-primary mr-2"></i>
+                            Pastikan GPS perangkat aktif.
+                        </li>
+
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-mobile-alt text-success mr-2"></i>
+                            Gunakan perangkat yang memiliki GPS.
+                        </li>
+
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-camera text-warning mr-2"></i>
+                            Ikuti proses verifikasi apabila diminta.
+                        </li>
+
+                    </ul>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- Daftar User Terdaftar (Baru Ditambahkan) -->
-        <div class="col-lg-8">
-            <div class="card card-outline card-primary shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title font-weight-bold text-dark m-0">
-                            <i class="fas fa-users text-primary mr-2"></i>Daftar User Terdaftar
-                        </h3>
-                        <a href="#" class="btn btn-sm btn-outline-primary">Kelola User</a>
+        <div class="col-md-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user mr-2"></i>
+                        Profil Employee
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="mr-3">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:60px;height:60px;">
+
+                                <i class="fas fa-user text-white fa-lg"></i>
+
+                            </div>
+                        </div>
+
+                        <div>
+
+                            <h5 class="mb-1 font-weight-bold">
+                                {{ auth()->user()->name }}
+                            </h5>
+
+                            <p class="mb-1 text-muted">
+                                <i class="fas fa-envelope mr-1"></i>
+                                {{ auth()->user()->email }}
+                            </p>
+
+                            <span class="badge badge-primary">
+                                Employee
+                            </span>
+
+                        </div>
+
                     </div>
+
                 </div>
-                <div class="card-body p-0 table-responsive">
-                    <table class="table table-hover table-striped mb-0 text-nowrap">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Bergabung</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+
             </div>
+
         </div>
 
     </div>
 
-    <!-- 3. Row Riwayat Aktivitas Ekspor Terakhir -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card card-outline card-secondary shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title font-weight-bold text-dark m-0">
-                            <i class="fas fa-history text-secondary mr-2"></i>Riwayat Generate ATP Terakhir
-                        </h3>
-                        <a href="#" class="btn btn-sm btn-outline-primary">Lihat Semua Log</a>
-                    </div>
-                </div>
-                <div class="card-body p-0 table-responsive">
-                    <table class="table table-hover table-striped mb-0 text-nowrap">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Waktu Ekspor</th>
-                                <th>Tipe ATP</th>
-                                <th>Region</th>
-                                <th>OLT Name</th>
-                                <th>Cluster / Feeder</th>
-                                <th>Status</th>
-                                <th class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>28 Sep 2026 18:55</td>
-                                <td><span class="badge badge-success">Distribusi</span></td>
-                                <td>BEKASI</td>
-                                <td>OLT CIKARANG UTARA</td>
-                                <td>CIKARANG KOTA RW 08 BEKASI</td>
-                                <td><span class="badge badge-subtle badge-success text-success font-weight-bold"><i
-                                            class="fas fa-check-circle mr-1"></i> Selesai</span></td>
-                                <td class="text-center">
-                                    <button class="btn btn-xs btn-outline-success"><i class="fas fa-download mr-1"></i>
-                                        Re-Download</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>28 Sep 2026 17:30</td>
-                                <td><span class="badge badge-info">Subfeeder</span></td>
-                                <td>BEKASI</td>
-                                <td>OLT CIKARANG UTARA</td>
-                                <td>FDR_CIKARANG_01</td>
-                                <td><span class="badge badge-subtle badge-success text-success font-weight-bold"><i
-                                            class="fas fa-check-circle mr-1"></i> Selesai</span></td>
-                                <td class="text-center">
-                                    <button class="btn btn-xs btn-outline-success"><i class="fas fa-download mr-1"></i>
-                                        Re-Download</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>28 Sep 2026 15:10</td>
-                                <td><span class="badge badge-success">Distribusi</span></td>
-                                <td>BOGOR</td>
-                                <td>OLT CIBINONG</td>
-                                <td>CIBINONG ASRI RW 02</td>
-                                <td><span class="badge badge-subtle badge-success text-success font-weight-bold"><i
-                                            class="fas fa-check-circle mr-1"></i> Selesai</span></td>
-                                <td class="text-center">
-                                    <button class="btn btn-xs btn-outline-success"><i class="fas fa-download mr-1"></i>
-                                        Re-Download</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
 </div>
-@stop
 
-@section('css')
-<style>
-    .info-box {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .info-box:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .badge-subtle {
-        background-color: rgba(40, 167, 69, 0.1);
-        padding: 5px 10px;
-        border-radius: 4px;
-    }
-</style>
-@stop
-
-@section('js')
-<!-- Perbaikan sintaks selector jQuery untuk Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    $(function () {
-        // Jika Anda ingin mengaktifkan kembali chart-nya, pastikan elemen <canvas id="atpExportChart"></canvas> sudah ada di HTML.
-
-        // var ctx = document.getElementById('atpExportChart').getContext('2d');
-        // var atpChart = new Chart(ctx, {
-        //     type: 'bar',
-        //     data: {
-        //         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep'],
-        //         datasets: [
-        //             {
-        //                 label: 'ATP Distribusi',
-        //                 backgroundColor: '#28a745',
-        //                 borderColor: '#28a745',
-        //                 data: [65, 59, 80, 81, 56, 55, 90, 110, 120]
-        //             },
-        //             {
-        //                 label: 'ATP Subfeeder',
-        //                 backgroundColor: '#17a2b8',
-        //                 borderColor: '#17a2b8',
-        //                 data: [28, 48, 40, 19, 86, 27, 60, 75, 88]
-        //             }
-        //         ]
-        //     },
-        //     options: {
-        //         responsive: true,
-        //         maintainAspectRatio: false,
-        //         scales: {
-        //             y: {
-        //                 beginAtZero: true
-        //             }
-        //         }
-        //     }
-        // });
-
-    });
-</script>
 @stop

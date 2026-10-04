@@ -212,7 +212,7 @@
                                             <input type="text" name="olt_name" class="form-control" required>
                                         </div>
                                         <div class="col-md-6 mb-3 mb-md-0">
-                                            <label class="font-weight-normal text-dark small mb-1">Feeder / Segment Name
+                                            <label class="font-weight-normal text-dark small mb-1">Cluster Name
                                                 <span class="text-danger">*</span></label>
                                             <input type="text" name="cluster_name" class="form-control"
                                                 placeholder="Contoh: FDR_01" required>

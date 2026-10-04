@@ -478,6 +478,273 @@ class AdminController extends Controller
     }
 
     // CW ATP  CODE
+    public function checklistPole(Request $request)
+    {
+        $isMasterDataActive = true;
+
+        // Mengarah ke view form input checklist pole
+        return view('admin.cwatp.checklist_pole', compact('isMasterDataActive'));
+    }
+    public function exportPole(Request $request)
+    {
+
+        $request->validate([
+            'region' => 'required|string',
+            'cluster_route' => 'required|string',
+            'link_from' => 'required|string',
+            'link_to' => 'required|string',
+            'address_from' => 'required|string',
+            'address_to' => 'required|string',
+            'poles' => 'required|array|min:1',
+            'poles.*.height' => 'required|string',
+            'poles.*.jumlah' => 'required|integer|min:1',
+            'poles.*.move_pole' => 'required|in:YES,NO',
+            'poles.*.cut_pole' => 'required|in:YES,NO',
+            'poles.*.label_pole' => 'required|in:YES,NO',
+            'poles.*.accessories_pole' => 'required|in:YES,NO',
+            'poles.*.foundation_pole' => 'required|in:YES,NO',
+        ]);
+
+        try {
+            // =========================
+            // LOKASI TEMPLATE
+            // =========================
+            $templatePath = storage_path('app/templates/Form Checklist Pole.xlsx');
+
+            if (!File::exists($templatePath)) {
+                $templatePath = public_path('app/templates/Form Checklist Pole.xlsx');
+            }
+
+            if (!File::exists($templatePath)) {
+                $templatePath = base_path('Form Checklist Pole.xlsx');
+            }
+
+            if (!File::exists($templatePath)) {
+                throw new \Exception(
+                    "File template 'Form Checklist Pole.xlsx' tidak ditemukan."
+                );
+            }
+
+            // =========================
+            // LOAD EXCEL
+            // =========================
+            $spreadsheet = IOFactory::load($templatePath);
+
+            // Ambil sheet template asli
+            $templateSheet = $spreadsheet->getSheetByName('Pole');
+
+            if (!$templateSheet) {
+                $templateSheet = $spreadsheet->getActiveSheet();
+                $templateSheet->setTitle('Pole');
+            }
+
+            // Simpan clone template dalam kondisi masih kosong
+            $templateClone = clone $templateSheet;
+
+            // Sheet pertama yang digunakan
+            $sheet = $templateSheet;
+
+            // =========================
+            // KONFIGURASI
+            // =========================
+            $startRow = 11;
+            $maxPolePerSheet = 20;
+            $poleNumber = 1;
+            $sheetNumber = 1;
+
+            // =========================
+            // FUNGSI HEADER
+            // =========================
+            $setHeader = function ($sheet) use ($request) {
+                $sheet->setCellValue(
+                    'E3',
+                    $request->input('region', '')
+                );
+
+                $sheet->setCellValue(
+                    'E4',
+                    $request->input('link_from', '')
+                );
+
+                $sheet->setCellValue(
+                    'E5',
+                    $request->input('address_from', '')
+                );
+
+                $sheet->setCellValue(
+                    'J3',
+                    $request->input('cluster_route', '')
+                );
+
+                $sheet->setCellValue(
+                    'J4',
+                    $request->input('link_to', '')
+                );
+
+                $sheet->setCellValue(
+                    'J5',
+                    $request->input('address_to', '')
+                );
+            };
+
+            // Header sheet pertama
+            $setHeader($sheet);
+
+            // =========================
+            // DATA POLE
+            // =========================
+            foreach ($request->input('poles', []) as $pole) {
+
+                $height = $pole['height'] ?? '';
+                $jumlah = (int) ($pole['jumlah'] ?? 0);
+
+                for ($i = 0; $i < $jumlah; $i++) {
+
+                    // Tentukan sheet berdasarkan nomor pole
+                    $sheetIndex = (int) floor(
+                        ($poleNumber - 1) / $maxPolePerSheet
+                    );
+
+                    $sheetNumber = $sheetIndex + 1;
+
+                    // =========================
+                    // SHEET BARU
+                    // =========================
+                    if ($sheetNumber > 1) {
+
+                        $sheetName = 'Pole ' . $sheetNumber;
+
+                        // Buat sheet baru hanya jika belum ada
+                        if (!$spreadsheet->sheetNameExists($sheetName)) {
+
+                            // Clone dari template ASLI
+                            $newSheet = clone $templateClone;
+
+                            $newSheet->setTitle($sheetName);
+
+                            $spreadsheet->addSheet($newSheet);
+                        }
+
+                        $sheet = $spreadsheet->getSheetByName($sheetName);
+
+                        // Header sheet baru
+                        $setHeader($sheet);
+                    }
+
+                    // =========================
+                    // BARIS POLE
+                    // =========================
+                    $row = $startRow + (
+                        ($poleNumber - 1) % $maxPolePerSheet
+                    );
+
+                    // Nomor Pole
+                    $sheet->setCellValue(
+                        'B' . $row,
+                        'Pole ' . $poleNumber
+                    );
+
+                    // Tipe / Tinggi Pole
+                    $sheet->setCellValue(
+                        'E' . $row,
+                        $height
+                    );
+
+                    // Move Pole
+                    $sheet->setCellValue(
+                        'G' . $row,
+                        strtoupper($pole['move_pole'] ?? 'NO')
+                    );
+
+                    // Cut Pole
+                    $sheet->setCellValue(
+                        'H' . $row,
+                        strtoupper($pole['cut_pole'] ?? 'NO')
+                    );
+
+                    // Label Pole
+                    $sheet->setCellValue(
+                        'I' . $row,
+                        strtoupper($pole['label_pole'] ?? 'NO')
+                    );
+
+                    // Accessories Pole
+                    $sheet->setCellValue(
+                        'J' . $row,
+                        strtoupper($pole['accessories_pole'] ?? 'NO')
+                    );
+
+                    // Foundation Pole
+                    $sheet->setCellValue(
+                        'K' . $row,
+                        strtoupper($pole['foundation_pole'] ?? 'NO')
+                    );
+
+                    // Lanjut ke pole berikutnya
+                    $poleNumber++;
+                }
+            }
+
+            // =========================
+            // TOTAL POLE
+            // =========================
+            $totalPole = $poleNumber - 1;
+
+            $totalSheet = (int) ceil(
+                $totalPole / $maxPolePerSheet
+            );
+
+            // =========================
+            // HISTORY LOG
+            // =========================
+            HistoryLog::create([
+                'user_id' => auth()->id(),
+                'module' => 'Checklist Pole',
+                'action_type' => 'Generate',
+                'region' => $request->input('region'),
+                'target_name' => $request->input('cluster_route'),
+                'description' => 'Generate Checklist Pole - ' .
+                    $totalPole . ' Pole, ' .
+                    $totalSheet . ' Sheet',
+                'status' => 'Completed',
+            ]);
+
+            // =========================
+            // DOWNLOAD
+            // =========================
+            $fileName = 'ATP_Checklist_Pole_' .
+                date('Ymd_His') .
+                '.xlsx';
+
+            $writer = IOFactory::createWriter(
+                $spreadsheet,
+                'Xlsx'
+            );
+
+            return response()->streamDownload(
+                function () use ($writer) {
+                    $writer->save('php://output');
+                },
+                $fileName,
+                [
+                    'Content-Type' =>
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'Cache-Control' => 'max-age=0',
+                ]
+            );
+
+        } catch (\Throwable $e) {
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Terjadi kesalahan: ' . $e->getMessage()
+                )
+                ->withInput();
+        }
+    }
+
     public function exportBulkAtp(Request $request)
     {
         // Sekarang pemanggilan ini tidak akan error lagi
@@ -749,10 +1016,6 @@ class AdminController extends Controller
             return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
-
-    /**
-     * Helper Private Function: Membersihkan foto konten saja tanpa menghapus logo header di A2:E5
-     */
     private function clearContentPhotosOnly($sheet)
     {
         if (!$sheet)
@@ -769,10 +1032,6 @@ class AdminController extends Controller
             }
         }
     }
-
-    /**
-     * Helper Private Function untuk Tempel Gambar ke Sheet Berdasarkan Map Keyword
-     */
     private function attachImageToSheet($imgFile, $sheet, array $map)
     {
         if (!$sheet)

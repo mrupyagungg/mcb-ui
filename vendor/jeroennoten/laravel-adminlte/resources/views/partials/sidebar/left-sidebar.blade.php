@@ -13,7 +13,7 @@
             <ul class="nav nav-pills nav-sidebar flex-column {{ config('adminlte.classes_sidebar_nav', '') }}"
                 data-widget="treeview" role="menu" @if (config('adminlte.sidebar_nav_animation_speed') != 300)
                 data-animation-speed="{{ config('adminlte.sidebar_nav_animation_speed') }}" @endif
-               @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
+                @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
 
                 @auth
                     {{-- ========================================== --}}
@@ -29,21 +29,33 @@
                         $userDashboard = $dashboardRoutes[$role] ?? null;
                     @endphp
 
-                    @if ($userDashboard)
-                        <li class="nav-item">
-                            <a href="{{ route($userDashboard) }}"
-                                class="nav-link {{ request()->routeIs($userDashboard) ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                    @endif
-
-
                     {{-- ========================================== --}}
                     {{-- MENU employee --}}
                     {{-- ========================================== --}}
                     @if ($role === 'employee')
+                        <li class="nav-item">
+                            <a href="{{ route('employee.dashboard') }}"
+                                class="nav-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('employee.attendance') }}"
+                                class="nav-link {{ request()->routeIs('employee.attendance') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-check"></i>
+                                <p>Absensi</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('employee.history') }}"
+                                class="nav-link {{ request()->routeIs('employee.history') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-history"></i>
+                                <p>Riwayat</p>
+                            </a>
+                        </li>
                     @endif
 
                     {{-- ========================================== --}}
@@ -60,18 +72,19 @@
                             $isMasterDataActive =
                                 request()->routeIs('admin.masterdata*') || request()->routeIs('admin.template*');
                         @endphp
-                        <li class="nav-item {{ $isMasterDataActive ? 'menu-open' : '' }}">
+                        <li class="nav-item {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'menu-open' : '' }}">
                             <a href="#"
-                                class="nav-link rounded-xl transition-all duration-200 {{ $isMasterDataActive ? 'bg-indigo-600/10 text-indigo-600 font-semibold shadow-sm' : 'text-slate-600 hover:bg-slate-100' }}"
-                                style="{{ $isMasterDataActive ? 'background-color: rgba(79, 70, 229, 0.1) !important; color: #4f46e5 !important;' : '' }}">
+                                class="nav-link rounded-xl transition-all duration-200 {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'bg-indigo-600/10 text-indigo-600 font-semibold shadow-sm' : 'text-slate-600 hover:bg-slate-100' }}"
+                                style="{{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'background-color: rgba(79, 70, 229, 0.1) !important; color: #4f46e5 !important;' : '' }}">
                                 <i
-                                    class="nav-icon fas fa-database {{ $isMasterDataActive ? 'text-indigo-600' : 'text-slate-400' }}"></i>
+                                    class="nav-icon fas fa-database {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'text-indigo-600' : 'text-slate-400' }}"></i>
                                 <p class="flex items-center justify-between">
                                     <span>Master Data</span>
                                     <i class="right fas fa-angle-left text-xs transition-transform duration-200"></i>
                                 </p>
                             </a>
                             <ul class="nav nav-treeview pl-3 space-y-1 mt-1">
+                                <!-- Menu Daftar Template -->
                                 <li class="nav-item">
                                     <a href="{{ route('admin.template.index') }}"
                                         class="nav-link rounded-lg transition-all duration-150 {{ request()->routeIs('admin.template.index') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}"
@@ -81,6 +94,7 @@
                                         <p>Daftar Template</p>
                                     </a>
                                 </li>
+                                <!-- Menu Upload Template -->
                                 <li class="nav-item">
                                     <a href="{{ route('admin.template.upload') }}"
                                         class="nav-link rounded-lg transition-all duration-150 {{ request()->routeIs('admin.template.upload') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}"
@@ -90,6 +104,7 @@
                                         <p>Upload Template</p>
                                     </a>
                                 </li>
+
                             </ul>
                         </li>
 
@@ -109,6 +124,16 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview pl-3 space-y-1 mt-1">
+                                <!-- Menu Baru: Checklist Form Pole (CWATP) -->
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.cwatp.checklist-pole') }}"
+                                        class="nav-link rounded-lg transition-all duration-150 {{ request()->routeIs('admin.cwatp.checklist-pole') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}"
+                                        style="{{ request()->routeIs('admin.cwatp.checklist-pole') ? 'background-color: #4f46e5 !important; color: #ffffff !important;' : '' }}">
+                                        <i
+                                            class="far fa-circle nav-icon text-xs {{ request()->routeIs('admin.cwatp.checklist-pole') ? 'text-white' : 'text-purple-500' }}"></i>
+                                        <p>Input Checklist Pole</p>
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a href="{{ route('admin.cwatp') }}"
                                         class="nav-link rounded-lg transition-all duration-150 {{ request()->routeIs('admin.cwatp') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}"
@@ -145,7 +170,7 @@
                             Administrasi
                         </li>
 
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="{{ route('admin.laporan') }}"
                                 class="disabled nav-link rounded-xl transition-all duration-150 {{ request()->routeIs('admin.laporan*') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100' }}"
                                 style="{{ request()->routeIs('admin.laporan*') ? 'background-color: #4f46e5 !important; color: #ffffff !important;' : '' }}">
@@ -153,7 +178,7 @@
                                     class="nav-icon fas fa-file-alt {{ request()->routeIs('admin.laporan*') ? 'text-white' : 'text-slate-400' }} disabled"></i>
                                 <p>Laporan Sistem</p>
                             </a>
-                        </li>
+                        </li> --}}
                         <!-- Tombol Logout Khusus di Sidebar -->
                         <div class="sidebar-custom px-3 py-2 mb-3">
                             <a href="#"

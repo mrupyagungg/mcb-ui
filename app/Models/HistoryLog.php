@@ -11,6 +11,16 @@ class HistoryLog extends Model
 
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'user_id',
+        'module',
+        'action_type',
+        'region',
+        'target_name',
+        'description',
+        'status'
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

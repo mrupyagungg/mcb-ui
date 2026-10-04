@@ -6,12 +6,18 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\Admin\KotaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AbsensiController;
+
 
 /*
 |--------------------------------------------------------------------------
 | Halaman Awal
 |--------------------------------------------------------------------------
 */
+
+Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+// Route::get('/employee/login', [EmployeeController::class, 'showLoginForm'])->name('employee.login');
+Route::get('/employee/attendance', [DashboardController::class, 'index'])->name('employee.attendance');
 
 // Opsi 1: Arahkan otomatis ke halaman Login
 // Route::get('/', function () {
@@ -46,7 +52,7 @@ Route::get('/blog', function () {
     return view('mcb-ui.blog');
 });
 
-Route::get('/api/news', [NewsController::class, 'index']);
+// Route::get('/api/news', [NewsController::class, 'index']);
 
 Route::get('/single', function () {
     return view('mcb-ui.single');
@@ -75,65 +81,61 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth'])->group(function () {
 
 
-    Route::prefix('admin')->name('admin.')->group(function () {
-        // CWATP
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+        // ================= CWATP =================
         Route::get('/cwatp', [AdminController::class, 'index'])->name('cwatp');
+
+        // TAMBAHKAN 2 BARIS INI:
+        Route::get('/cwatp/checklist-pole', [AdminController::class, 'checklistPole'])->name('cwatp.checklist-pole');
+        Route::post('/cwatp/export-pole', [AdminController::class, 'exportPole'])->name('cwatp.export-pole');
+
         Route::post('/cwatp/export', [AdminController::class, 'exportAtp'])->name('cwatp.export');
         Route::post('/cwatp/export-bulk', [AdminController::class, 'exportBulkAtp'])->name('cwatp.export-bulk');
 
-        // OPMC
+        // ================= OPMC =================
         Route::get('/opmc', [AdminController::class, 'opmcIndex'])->name('opmc');
         Route::post('/opmc/export-bulk', [AdminController::class, 'exportBulkOpmc'])->name('opmc.export-bulk');
 
-        // OPMC Reader
+        // ================= OPMC Reader =================
         Route::prefix('opmc-reader')->name('opmc.reader.')->group(function () {
             Route::get('/', [AdminController::class, 'opmcReaderIndex'])->name('index');
             Route::post('/process', [AdminController::class, 'opmcReaderProcess'])->name('process');
         });
 
-        // --- FITUR BARU: OCR FOTO KE EXCEL ---
+        // ================= FITUR: OCR FOTO KE EXCEL =================
         Route::get('/opmc/ocr', [AdminController::class, 'opmcOcrIndex'])->name('opmc.ocr');
         Route::post('/opmc/process-ocr', [AdminController::class, 'processOcr'])->name('opmc.process-ocr');
         Route::post('/opmc/generate-excel', [AdminController::class, 'generateExcel'])->name('opmc.generate-excel');
     });
-    /*
-       |--------------------------------------------------------------------------
-       | ADMIN
-       |--------------------------------------------------------------------------
-       */
-
-    Route::middleware('role:admin')
-        ->prefix('admin')
-        ->group(function () {
-
-            // PERBAIKAN: Arahkan ke DashboardController alih-alih anonymous function
-            Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-
-            Route::get('/laporan', function () {
-                return view('admin.laporan');
-            })->name('admin.laporan');
-
-        });
-
-
 
     /*
     |--------------------------------------------------------------------------
     | employee
     |--------------------------------------------------------------------------
     */
-
     Route::middleware('role:employee')
         ->prefix('employee')
         ->group(function () {
 
-            Route::get('/dashboard', function () {
-                return view('employee.dashboard');
-            })->name('employee.dashboard');
+            Route::get('/dashboard', [AbsensiController::class, 'dashboard'])
+                ->name('employee.dashboard');
 
+            Route::get('/attendance', [AbsensiController::class, 'index'])
+                ->name('employee.attendance');
+
+            Route::get('/riwayat', [AbsensiController::class, 'riwayat'])
+                ->name('employee.history');
         });
 
+    Route::middleware('auth')->group(function () {
 
+        Route::post('/absensi/masuk', [AbsensiController::class, 'masuk'])
+            ->name('absensi.masuk');
+
+        Route::post('/absensi/keluar', [AbsensiController::class, 'keluar'])
+            ->name('absensi.keluar');
+    });
 
     /*
     |--------------------------------------------------------------------------

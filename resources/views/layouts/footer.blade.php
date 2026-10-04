@@ -58,10 +58,12 @@
     <div class="container copyright">
         <div class="row">
             <div class="col-md-6">
-                <p>&copy; <a href="#">PT. MEGANTARA CIPTA BERSAUDARA</a>, All Right Reserved.</p>
+                <p>&copy; <a href="#">PT. MEGANTARA CIPTA BERSAUDARA</a></p>
             </div>
             <div class="col-md-6">
-                <p>Designed By <a href="https://htmlcodex.com">HTML Codex</a></p>
+                <small>
+                    <p>Designed By <a href="https://htmlcodex.com">Mrupy's Code</a></p>
+                </small>
             </div>
         </div>
     </div>
