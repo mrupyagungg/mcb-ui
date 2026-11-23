@@ -13,7 +13,7 @@
             <ul class="nav nav-pills nav-sidebar flex-column {{ config('adminlte.classes_sidebar_nav', '') }}"
                 data-widget="treeview" role="menu" @if (config('adminlte.sidebar_nav_animation_speed') != 300)
                 data-animation-speed="{{ config('adminlte.sidebar_nav_animation_speed') }}" @endif
-                @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
+               @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
 
                 @auth
                     {{-- ========================================== --}}
@@ -57,6 +57,111 @@
                             </a>
                         </li>
                     @endif
+
+                    {{-- ========================================== --}}
+                    {{-- MENU hrd --}}
+                    {{-- ========================================== --}}
+
+                    @if ($role === 'hrd')
+
+                        {{-- DASHBOARD --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.dashboard') }}"
+                                class="nav-link {{ request()->routeIs('hrd.dashboard') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        {{-- DATA KARYAWAN --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.karyawan') }}"
+                                class="nav-link {{ request()->routeIs('hrd.karyawan') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Data Karyawan</p>
+                            </a>
+                        </li>
+
+                        {{-- RIWAYAT ABSENSI --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.riwayat-absensi') }}"
+                                class="nav-link {{ request()->routeIs('hrd.riwayat-absensi') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-check"></i>
+                                <p>Riwayat Absensi</p>
+                            </a>
+                        </li>
+
+                        {{-- ASSETS --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.assets') }}"
+                                class="nav-link {{ request()->routeIs('hrd.assets*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-boxes"></i>
+                                <p>Assets</p>
+                            </a>
+                        </li>
+
+                        {{-- KPI KARYAWAN --}}
+                        <li class="nav-item {{ request()->routeIs('hrd.kpi.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->routeIs('hrd.kpi.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>
+                                    KPI Karyawan
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+
+                            <ul class="nav nav-treeview">
+
+                                {{-- DASHBOARD KPI --}}
+                                <li class="nav-item">
+                                    <a href="{{ route('hrd.kpi.dashboard') }}"
+                                        class="nav-link {{ request()->routeIs('hrd.kpi.dashboard') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Dashboard KPI</p>
+                                    </a>
+                                </li>
+
+                                {{-- PENGATURAN INDIKATOR --}}
+                                <li class="nav-item">
+                                    <a href="{{ route('hrd.kpi.indikator') }}"
+                                        class="nav-link {{ request()->routeIs('hrd.kpi.indikator') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pengaturan Indikator</p>
+                                    </a>
+                                </li>
+
+                                {{-- PENILAIAN KPI --}}
+                                <li class="nav-item">
+                                    <a href="{{ route('hrd.kpi.penilaian') }}"
+                                        class="nav-link {{ request()->routeIs('hrd.kpi.penilaian') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Penilaian KPI</p>
+                                    </a>
+                                </li>
+
+                                {{-- REKAPITULASI KPI --}}
+                                <li class="nav-item">
+                                    <a href="{{ route('hrd.kpi.rekapitulasi') }}"
+                                        class="nav-link {{ request()->routeIs('hrd.kpi.rekapitulasi') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Rekapitulasi KPI</p>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+
+                        {{-- LAPORAN --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.laporan') }}"
+                                class="nav-link {{ request()->routeIs('hrd.laporan') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-file-alt"></i>
+                                <p>Laporan</p>
+                            </a>
+                        </li>
+
+                    @endif
+
 
                     {{-- ========================================== --}}
                     {{-- MENU ADMIN --}}

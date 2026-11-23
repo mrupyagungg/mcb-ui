@@ -22,7 +22,7 @@
 @section('content')
     <div class="container-fluid">
         {{-- Alert Notifikasi Success / Error --}}
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -31,7 +31,7 @@
             </div>
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-triangle mr-2"></i>{{ session('error') }}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -137,8 +137,8 @@
 
                 <div class="card-body">
                     <div class="row">
-                        {{-- Input 1: File OPM SPL --}}
-                        <div class="col-md-6">
+                        {{-- Input 1: File OPM SPL Excel--}}
+                        <div class="col-md-4">
                             <div class="form-group mb-0">
                                 <label for="opm_spl_file">1. Upload File OPM SPL (Feeder)</label>
                                 <div class="input-group">
@@ -146,7 +146,7 @@
                                         <input type="file"
                                             class="custom-file-input @error('opm_spl_file') is-invalid @enderror"
                                             id="opm_spl_file" name="opm_spl_file" accept=".xlsx, .xls">
-                                        <label class="custom-file-label" for="opm_spl_file">Pilih file OPM SPL...</label>
+                                        <label class="custom-file-label" for="opm_spl_file">Pilih file OPM SPL.xlsx</label>
                                     </div>
                                     <div class="input-group-append">
                                         <span class="input-group-text"><i class="fas fa-file-excel"></i></span>
@@ -161,8 +161,8 @@
                             </div>
                         </div>
 
-                        {{-- Input 2: File OPM Distribution --}}
-                        <div class="col-md-6">
+                        {{-- Input 2: File OPM Distribution Excel--}}
+                        <div class="col-md-4">
                             <div class="form-group mb-0">
                                 <label for="opm_dist_file">2. Upload File OPM FAT (Distribution)</label>
                                 <div class="input-group">
@@ -171,7 +171,7 @@
                                             class="custom-file-input @error('opm_dist_file') is-invalid @enderror"
                                             id="opm_dist_file" name="opm_dist_file" accept=".xlsx, .xls">
                                         <label class="custom-file-label" for="opm_dist_file">Pilih file OPM
-                                            Distribution...</label>
+                                            FAT.xlsx</label>
                                     </div>
                                     <div class="input-group-append">
                                         <span class="input-group-text"><i class="fas fa-file-excel"></i></span>
@@ -185,12 +185,36 @@
                                 </small>
                             </div>
                         </div>
+
+                        {{-- Input 3: File OPM Distribution/Supporting Zip --}}
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label for="opm_zip_file">3. Upload File Summary</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file"
+                                            class="custom-file-input @error('opm_zip_file') is-invalid @enderror"
+                                            id="opm_zip_file" name="opm_zip_file" accept=".zip, .rar">
+                                        <label class="custom-file-label" for="opm_zip_file">Pilih file zip pendukung</label>
+                                    </div>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="fas fa-file-archive"></i></span>
+                                    </div>
+                                </div>
+                                @error('opm_zip_file')
+                                    <span class="text-danger small">{{ $message }}</span>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    Format: <strong>.zip / .rar</strong>
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card-footer bg-white text-right">
                     <button type="reset" class="btn btn-default"><i class="fas fa-undo mr-1"></i> Reset</button>
-                    <button type="submit" class="btn btn-success ml-2" id="btn-submit" disabled>
+                    <button type="submit" class="btn btn-success ml-2" id="btn-submit">
                         <i class="fas fa-cogs mr-1"></i> Process & Export Template
                     </button>
                 </div>

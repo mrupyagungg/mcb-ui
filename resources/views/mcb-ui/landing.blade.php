@@ -518,15 +518,15 @@
                     });
 
                     marker.bindPopup(`
-                        <div style="min-width:200px;">
-                            <h4 style="margin:0 0 8px; font-size:16px; font-weight:700; color:#0f172a;">
-                                ${project.nama}
-                            </h4>
-                            <p style="margin:0; font-size:14px;">
-                                <strong>Kota:</strong> ${project.kota}
-                            </p>
-                        </div>
-                    `);
+                            <div style="min-width:200px;">
+                                <h4 style="margin:0 0 8px; font-size:16px; font-weight:700; color:#0f172a;">
+                                    ${project.nama}
+                                </h4>
+                                <p style="margin:0; font-size:14px;">
+                                    <strong>Kota:</strong> ${project.kota}
+                                </p>
+                            </div>
+                        `);
 
                     marker.addTo(markersLayer);
                 });

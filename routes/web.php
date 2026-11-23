@@ -7,7 +7,9 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\Admin\KotaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AbsensiController;
-
+use App\Http\Controllers\HRDController;
+use App\Http\Controllers\KPIController;
+use App\Http\Controllers\AssetsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,6 +103,9 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('opmc-reader')->name('opmc.reader.')->group(function () {
             Route::get('/', [AdminController::class, 'opmcReaderIndex'])->name('index');
             Route::post('/process', [AdminController::class, 'opmcReaderProcess'])->name('process');
+
+            Route::post('/generate-otdr-pdf', [AdminController::class, 'generateOtdrPdf'])
+                ->name('generate-otdr-pdf');
         });
 
         // ================= FITUR: OCR FOTO KE EXCEL =================
@@ -136,6 +141,116 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/absensi/keluar', [AbsensiController::class, 'keluar'])
             ->name('absensi.keluar');
     });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HRD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('hrd')->name('hrd.')->middleware(['auth', 'role:hrd'])->group(function () {
+
+        Route::get('/dashboard', [HRDController::class, 'dashboard'])->name('dashboard');
+        Route::get('/karyawan', [HRDController::class, 'karyawan'])->name('karyawan');
+        Route::post('/karyawan', [HRDController::class, 'storeKaryawan'])
+            ->name('karyawan.store');
+        Route::get('/riwayat-absensi', [HRDController::class, 'riwayatAbsensi'])->name('riwayat-absensi');
+        Route::get('/assets', [HRDController::class, 'assets'])->name('assets');
+
+        // IMPORT EXPORT KARYAWAN
+        Route::post('/karyawan/import', [HRDController::class, 'importKaryawan'])
+            ->name('karyawan.import');
+
+        Route::get('/karyawan/export', [HRDController::class, 'exportKaryawan'])
+            ->name('karyawan.export');
+
+        Route::get('/karyawan/template', [HRDController::class, 'templateKaryawan'])
+            ->name('karyawan.template');
+
+        // KPI
+        Route::prefix('kpi')->name('kpi.')->group(function () {
+            Route::get('/dashboard', [KPIController::class, 'dashboard'])->name('dashboard');
+            Route::get('/penilaian', [KPIController::class, 'penilaian'])->name('penilaian');
+            Route::get('/rekapitulasi', [KPIController::class, 'rekapitulasi'])->name('rekapitulasi');
+
+            // PENGATURAN INDIKATOR
+            Route::get('/indikator', [KPIController::class, 'indikator'])->name('indikator');
+            Route::post('/indikator', [KPIController::class, 'storeIndikator'])->name('indikator.store');
+            Route::put('/indikator/{id}', [KPIController::class, 'updateIndikator'])->name('indikator.update');
+            Route::delete('/indikator/{id}', [KPIController::class, 'destroyIndikator'])->name('indikator.destroy');
+        });
+        Route::get('/laporan', [HRDController::class, 'laporan'])->name('laporan');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSET MANAGEMENT
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('assets')->name('assets.')->middleware(['auth'])->group(function () {
+
+        // Dashboard Assets
+        Route::get('/dashboard', [AssetsController::class, 'dashboard'])
+            ->name('dashboard');
+
+        // Data Assets
+        Route::get('/data', [AssetsController::class, 'index'])
+            ->name('index');
+
+        Route::get('/create', [AssetsController::class, 'create'])
+            ->name('create');
+
+        Route::post('/store', [AssetsController::class, 'store'])
+            ->name('store');
+
+        Route::get('/{asset}/edit', [AssetsController::class, 'edit'])
+            ->name('edit');
+
+        Route::put('/{asset}', [AssetsController::class, 'update'])
+            ->name('update');
+
+        Route::delete('/{asset}', [AssetsController::class, 'destroy'])
+            ->name('destroy');
+
+        // Categories
+        Route::get('/categories', [AssetsController::class, 'categories'])
+            ->name('categories');
+
+        // Assignment Assets
+        Route::get('/assignment', [AssetsController::class, 'assignment'])
+            ->name('assignment');
+
+        Route::post('/assignment', [AssetsController::class, 'assign'])
+            ->name('assign');
+
+        // Return Assets
+        Route::get('/return', [AssetsController::class, 'returns'])
+            ->name('return');
+
+        Route::post('/return', [AssetsController::class, 'processReturn'])
+            ->name('process-return');
+
+        // Maintenance
+        Route::get('/maintenance', [AssetsController::class, 'maintenance'])
+            ->name('maintenance');
+
+        Route::post('/maintenance', [AssetsController::class, 'storeMaintenance'])
+            ->name('maintenance.store');
+
+        // Asset History
+        Route::get('/history', [AssetsController::class, 'history'])
+            ->name('history');
+
+        // Reports
+        Route::get('/reports', [AssetsController::class, 'reports'])
+            ->name('reports');
+
+    });
+
 
     /*
     |--------------------------------------------------------------------------

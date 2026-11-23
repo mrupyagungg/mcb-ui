@@ -246,14 +246,14 @@
                                 let status = val !== '' ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-secondary">-</span>';
 
                                 tableHtml += `
-                                                    <tr>
-                                                        <td class="align-middle font-weight-bold">Port ${i}</td>
-                                                        <td>
-                                                            <input type="text" name="ports[${i}]" value="${val}" class="form-control form-control-sm text-center">
-                                                        </td>
-                                                        <td class="align-middle">${status}</td>
-                                                    </tr>
-                                                `;
+                                                        <tr>
+                                                            <td class="align-middle font-weight-bold">Port ${i}</td>
+                                                            <td>
+                                                                <input type="text" name="ports[${i}]" value="${val}" class="form-control form-control-sm text-center">
+                                                            </td>
+                                                            <td class="align-middle">${status}</td>
+                                                        </tr>
+                                                    `;
                             }
                             $('#portTableBody').html(tableHtml);
 

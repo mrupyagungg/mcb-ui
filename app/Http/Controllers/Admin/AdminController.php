@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use App\Models\HistoryLog;
 use ZipArchive;
+use Exception;
 
 class AdminController extends Controller
 {
@@ -32,48 +33,9 @@ class AdminController extends Controller
         return view('admin.opmc.reader');
     }
 
+    // OPMC Controller
     public function process(Request $request, OpmService $opmService)
     {
-        // 1. Validasi Input
-        $request->validate([
-            'region' => 'required|string',
-            'cluster' => 'required|string',
-            'opm_spl_file' => 'nullable|file|mimes:xlsx,xls',
-            'opm_dist_file' => 'nullable|file|mimes:xlsx,xls',
-        ]);
-
-        // 2. Kumpulkan Data Header
-        $headerData = [
-            'region' => $request->input('region'),
-            'cluster' => $request->input('cluster'),
-            'olt_name' => $request->input('olt_name'),
-            'odf_number' => $request->input('odf_number'),
-            'fdt_number' => $request->input('fdt_number'),
-            'opm_calibration_deviation' => $request->input('opm_calibration_deviation'),
-            'power_meter_sn' => $request->input('power_meter_sn'),
-            'address' => $request->input('address'),
-        ];
-
-        // Path File
-        $templatePath = storage_path('app/templates/OTDR_for_OPM.xlsx');
-        $outputPath = storage_path('app/public/OPM_Result_' . time() . '.xlsx');
-
-        $opmSplPath = $request->hasFile('opm_spl_file') ? $request->file('opm_spl_file')->getRealPath() : null;
-        $opmDistPath = $request->hasFile('opm_dist_file') ? $request->file('opm_dist_file')->getRealPath() : null;
-
-        // 3. Panggil Service
-        try {
-            $opmService->processAllSheets($templatePath, $opmSplPath, $opmDistPath, $outputPath, $headerData);
-            // Return file untuk diunduh langsung oleh Fetch/Blob JavaScript
-            return response()->download($outputPath)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
-        }
-    }
-
-    public function opmcReaderProcess(Request $request, \App\Services\OpmService $opmService)
-    {
-        // 1. Validasi Input (Header & File)
         $request->validate([
             'region' => 'required|string',
             'cluster' => 'required|string',
@@ -85,13 +47,13 @@ class AdminController extends Controller
             'address' => 'nullable|string',
             'opm_spl_file' => 'nullable|file|mimes:xlsx,xls|max:10240',
             'opm_dist_file' => 'nullable|file|mimes:xlsx,xls|max:10240',
+            'opm_zip_file' => 'nullable|file|mimes:zip,rar|max:51200',
         ]);
 
-        if (!$request->hasFile('opm_spl_file') && !$request->hasFile('opm_dist_file')) {
-            return redirect()->back()->with('error', 'Pilih minimal satu file untuk diproses!');
+        if (!$request->hasFile('opm_spl_file') && !$request->hasFile('opm_dist_file') && !$request->hasFile('opm_zip_file')) {
+            return redirect()->back()->withInput()->with('error', 'Pilih minimal satu file untuk diproses!');
         }
 
-        // 2. Kumpulkan Data Header dari Form
         $headerData = [
             'region' => $request->input('region'),
             'cluster' => $request->input('cluster'),
@@ -110,103 +72,153 @@ class AdminController extends Controller
             $opmSplPath = $request->hasFile('opm_spl_file') ? $request->file('opm_spl_file')->getRealPath() : null;
             $opmDistPath = $request->hasFile('opm_dist_file') ? $request->file('opm_dist_file')->getRealPath() : null;
 
-            // 3. Kirim $headerData sebagai argumen ke service
-            $opmService->processAllSheets($templatePath, $opmSplPath, $opmDistPath, $outputPath, $headerData);
+            // Ekstraksi ZIP secara rekursif mencari COMBINE.pdf di semua sub-folder
+            $extractedPdfData = [];
+            if ($request->hasFile('opm_zip_file')) {
+                $zipFile = $request->file('opm_zip_file');
+                $zip = new ZipArchive;
 
-            // Return file untuk diunduh langsung oleh Fetch/Blob JavaScript
+                if ($zip->open($zipFile->path()) === TRUE) {
+                    $extractPath = storage_path('app/public/extracted_pdf_' . time());
+                    $zip->extractTo($extractPath);
+                    $zip->close();
+
+                    $iterator = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($extractPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+                        \RecursiveIteratorIterator::SELF_FIRST
+                    );
+
+                    foreach ($iterator as $file) {
+                        if ($file->isFile() && strtoupper($file->getFilename()) === 'COMBINE.pdf') {
+                            $combinePdfPath = $file->getPathname();
+                            // Ambil nama folder dari parent direktori COMBINE.pdf sebagai key lineName
+                            $lineName = basename(dirname($combinePdfPath));
+                            $extractedPdfData[$lineName] = $combinePdfPath;
+                        }
+                    }
+                }
+            }
+
+            $opmService->processAllSheets(
+                $templatePath,
+                $opmSplPath,
+                $opmDistPath,
+                $outputPath,
+                $headerData,
+                $extractedPdfData
+            );
+
             return response()->download($outputPath)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal memproses file: ' . $e->getMessage());
         }
     }
-    public function processOcr(Request $request)
+
+    public function opmcReaderProcess(Request $request, OpmService $opmService)
     {
         $request->validate([
-            'photo' => 'required|image|mimes:jpeg,jpg,png|max:10240',
+            'region' => 'required|string',
+            'cluster' => 'required|string',
+            'olt_name' => 'nullable|string',
+            'odf_number' => 'nullable|string',
+            'fdt_number' => 'nullable|string',
+            'opm_calibration_deviation' => 'nullable|string',
+            'power_meter_sn' => 'nullable|string',
+            'address' => 'nullable|string',
+            'opm_spl_file' => 'nullable|file|mimes:xlsx,xls|max:10240',
+            'opm_dist_file' => 'nullable|file|mimes:xlsx,xls|max:10240',
+            'opm_zip_file' => 'nullable|file|mimes:zip,rar|max:51200',
+        ]);
+
+        if (!$request->hasFile('opm_spl_file') && !$request->hasFile('opm_dist_file') && !$request->hasFile('opm_zip_file')) {
+            return redirect()->back()->withInput()->with('error', 'Pilih minimal satu file untuk diproses!');
+        }
+
+        $headerData = [
+            'region' => $request->input('region'),
+            'cluster' => $request->input('cluster'),
+            'olt_name' => $request->input('olt_name'),
+            'odf_number' => $request->input('odf_number'),
+            'fdt_number' => $request->input('fdt_number'),
+            'opm_calibration_deviation' => $request->input('opm_calibration_deviation'),
+            'power_meter_sn' => $request->input('power_meter_sn'),
+            'address' => $request->input('address'),
+        ];
+
+        try {
+            $templatePath = storage_path('app/templates/OTDR_for_OPM_FDT-FAT.xlsx');
+            $outputPath = storage_path('app/public/OTDR_for_OPM_FDT-FAT_' . time() . '.xlsx');
+
+            $opmSplPath = $request->hasFile('opm_spl_file') ? $request->file('opm_spl_file')->getRealPath() : null;
+            $opmDistPath = $request->hasFile('opm_dist_file') ? $request->file('opm_dist_file')->getRealPath() : null;
+
+            $extractedPdfData = [];
+            if ($request->hasFile('opm_zip_file')) {
+                $zipFile = $request->file('opm_zip_file');
+                $zip = new ZipArchive;
+
+                if ($zip->open($zipFile->path()) === TRUE) {
+                    $extractPath = storage_path('app/public/extracted_pdf_fdt_' . time());
+                    $zip->extractTo($extractPath);
+                    $zip->close();
+
+                    $iterator = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($extractPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+                        \RecursiveIteratorIterator::SELF_FIRST
+                    );
+
+                    foreach ($iterator as $file) {
+                        if ($file->isFile() && strtolower($file->getExtension()) === 'pdf') {
+                            $pdfPath = $file->getPathname();
+                            $filenameWithoutExt = strtoupper(pathinfo($file->getFilename(), PATHINFO_FILENAME));
+
+                            // Cocokan nama file yang berawalan A atau B (misal: A01, A02, B01)
+                            if (preg_match('/^(A\d+|B\d+)/', $filenameWithoutExt, $match)) {
+                                $lineName = $match[1]; // Menjadi 'A01', 'A02', dll.
+                                $extractedPdfData[$lineName] = $pdfPath;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Panggil Service untuk mengeksekusi pengisian Excel
+            $opmService->processAllSheets(
+                $templatePath,
+                $opmSplPath,
+                $opmDistPath,
+                $outputPath,
+                $headerData,
+                $extractedPdfData
+            );
+
+            return response()->download($outputPath)->deleteFileAfterSend(true);
+
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal memproses file: ' . $e->getMessage());
+        }
+    }
+    public function generateOtdrPdf(Request $request, OpmService $opmService)
+    {
+        $request->validate([
+            'pdf_file' => 'required|file|mimes:pdf|max:51200',
         ]);
 
         try {
-            $image = $request->file('photo');
+            $pdfPath = $request->file('pdf_file')->getRealPath();
 
-            // 1. Buat direktori temp & scripts jika belum ada
-            $tempDir = storage_path('app/temp');
-            $scriptDir = storage_path('app/scripts');
+            $pdfData = $opmService->parseOtdrPdf($pdfPath);
 
-            if (!File::exists($tempDir)) {
-                File::makeDirectory($tempDir, 0755, true);
-            }
-            if (!File::exists($scriptDir)) {
-                File::makeDirectory($scriptDir, 0755, true);
-            }
-
-            // 2. Simpan gambar sementara
-            $tempFileName = 'ocr_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $tempPath = storage_path('app/temp/' . $tempFileName);
-            $image->move($tempDir, $tempFileName);
-
-            // 3. Tentukan path skrip Python & lokasi executable Python
-            $scriptPath = storage_path('app/scripts/ocr_processor.py');
-
-            // Validasi keberadaan file script Python
-            if (!File::exists($scriptPath)) {
-                if (File::exists($tempPath)) {
-                    File::delete($tempPath);
-                }
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File script Python tidak ditemukan di: ' . $scriptPath
-                ], 500);
-            }
-
-            // Deteksi OS: Gunakan 'python' untuk Windows, atau 'python3' untuk Linux/Mac
-            $defaultPython = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
-            $pythonBinary = env('PYTHON_BINARY', $defaultPython);
-
-            // 4. Jalankan perintah menggunakan format yang aman untuk Windows & Linux
-            $command = sprintf(
-                '"%s" "%s" "%s"',
-                $pythonBinary,
-                $scriptPath,
-                $tempPath
-            );
-
-            $result = Process::run($command);
-
-            // 5. Hapus gambar sementara
-            if (File::exists($tempPath)) {
-                File::delete($tempPath);
-            }
-
-            // Jika eksekusi gagal (misal: Python tidak terdaftar di Environment Path)
-            if ($result->failed()) {
-                $errorMsg = $result->errorOutput() ?: $result->output();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal menjalankan OCR lokal: ' . $errorMsg
-                ], 500);
-            }
-
-            $parsedData = json_decode(trim($result->output()), true);
-
-            if (isset($parsedData['error'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error dari OCR: ' . $parsedData['error']
-                ], 422);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $parsedData
-            ]);
+            return view('admin.opm.otdr-pdf', compact('pdfData'));
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal membaca PDF: ' . $e->getMessage());
         }
     }
+
+    // Checkist Pole OPM
     public function generateExcel(Request $request)
     {
         $data = $request->validate([
@@ -220,7 +232,7 @@ class AdminController extends Controller
             'ports' => 'nullable|array',
         ]);
 
-        $templatePath = storage_path('app/templatesTemplate File Foto OPM.xlsx');
+        $templatePath = storage_path('app/templates/Template File Foto OPM.xlsx');
 
         if (!file_exists($templatePath)) {
             $spreadsheet = new Spreadsheet();

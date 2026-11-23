@@ -5,20 +5,22 @@ namespace App\Services;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Smalot\PdfParser\Parser; // Pastikan library smalot/pdfparser sudah terinstall (composer require smalot/pdfparser)
 use InvalidArgumentException;
 use Exception;
 
 class OpmService
 {
     /**
-     * Memproses file OPM SPL (Feeder) dan OPM Distribution, 
+     * Memproses file OPM SPL (Feeder), OPM Distribution, dan ZIP PDF Combine, 
      * lalu meng-inject Header & Data ke template OTDR.
      *
-     * @param string $templatePath  Path ke file template OTDR (.xlsx)
-     * @param string|null $opmSplPath  Path ke file OPM SPL / Feeder
-     * @param string|null $opmDistPath Path ke file OPM Distribution
-     * @param string $outputPath Path tujuan hasil ekspor
-     * @param array $headerData Array berisi informasi header
+     * @param string      $templatePath      Path ke file template OTDR (.xlsx)
+     * @param string|null $opmSplPath        Path ke file OPM SPL / Feeder
+     * @param string|null $opmDistPath       Path ke file OPM Distribution
+     * @param string      $outputPath        Path tujuan hasil ekspor
+     * @param array       $headerData        Array berisi informasi header
+     * @param array       $extractedPdfData  Array pemetaan [ 'LINE_NAME' => '/path/to/COMBINE.pdf', ... ]
      * @return void
      * @throws Exception|InvalidArgumentException
      */
@@ -27,7 +29,8 @@ class OpmService
         ?string $opmSplPath,
         ?string $opmDistPath,
         string $outputPath,
-        array $headerData = []
+        array $headerData = [],
+        array $extractedPdfData = []
     ): void {
         if (!file_exists($templatePath)) {
             throw new InvalidArgumentException("File template tidak ditemukan pada path: {$templatePath}");
@@ -51,7 +54,12 @@ class OpmService
                 $this->processDistributionSheet($spreadsheetTemplate, $opmDistPath);
             }
 
-            // 4. Simpan Hasil ke Path Output
+            // 4. Proses Data Sheet 3: OTDR Summary / Pemetaan PDF Combine
+            if (!empty($extractedPdfData)) {
+                $this->processOtdrSummarySheet($spreadsheetTemplate, $extractedPdfData);
+            }
+
+            // 5. Simpan Hasil ke Path Output
             $writer = IOFactory::createWriter($spreadsheetTemplate, 'Xlsx');
             $writer->save($outputPath);
 
@@ -237,5 +245,203 @@ class OpmService
         }
 
         unset($spreadsheetDist);
+    }
+
+    /**
+     * Pengisian data Sheet 3: OTDR Summary / Pemetaan PDF Combine
+     */
+
+    private function processOtdrSummarySheet(Spreadsheet $spreadsheetTemplate, array $extractedPdfData): void
+    {
+        $wsSummary = $spreadsheetTemplate->getSheetByName('OTDR Summary (FDT-FAT)')
+            ?? $spreadsheetTemplate->getSheetByName('OTDR Sumary (FDT-FAT)');
+
+        if (!$wsSummary) {
+            throw new Exception("Sheet 'OTDR Summary (FDT-FAT)' tidak ditemukan pada template Excel.");
+        }
+
+        foreach ($extractedPdfData as $pdfPath) {
+            if (!file_exists($pdfPath)) {
+                continue;
+            }
+
+            // Gunakan helper parseCombinePdfPages untuk membaca semua halaman dan memetakan berdasarkan nama FAT (A01, A02, dll)
+            $parsedPages = $this->parseCombinePdfPages($pdfPath);
+
+            foreach ($parsedPages as $lineName => $data) {
+                // Tentukan baris Excel secara dinamis berdasarkan nama FAT/Line (misal A01, A02, dll)
+                $targetRow = $this->resolveExcelRowByLineName($wsSummary, $lineName);
+
+                if (!$targetRow) {
+                    continue; // Lewati jika baris untuk FAT tersebut tidak ditemukan di template
+                }
+
+                $distance = $data['distance'] ?? null;
+                $cumLoss = $data['cum_loss'] ?? null;
+                $is1550 = $data['is_1550'] ?? false;
+
+                // Masukkan data ke Excel jika nilai valid
+                if ($distance !== null && $cumLoss !== null) {
+                    // Tentukan kolom berdasarkan panjang gelombang (1310 nm atau 1550 nm)
+                    // Sesuaikan nama kolom jika layout template Anda memisahkan 1310 dan 1550
+                    // Contoh standar: Kolom F & G untuk 1310, atau sesuaikan kebutuhan layout Anda
+
+                    // Kolom F: Distance (Km)
+                    $wsSummary->setCellValue('F' . $targetRow, str_replace(',', '.', $distance));
+
+                    // Kolom G: Cum Loss (1310 nm)
+                    $wsSummary->setCellValue('G' . $targetRow, str_replace(',', '.', $cumLoss));
+                }
+            }
+        }
+    }
+    private function parsePdfEndValues($pdfPath)
+    {
+        try {
+            if (!file_exists($pdfPath)) {
+                return null;
+            }
+
+            $parser = new Parser();
+            $pdf = $parser->parseFile($pdfPath);
+            $text = $pdf->getText();
+
+            // Ubah teks menjadi satu baris panjang untuk membersihkan spasi berlebih / newline
+            $cleanText = preg_replace('/\s+/', ' ', $text);
+
+            // Cari pola yang mendahului kata END dan ambil angka-angka berformat desimal di dekatnya
+            // Contoh teks: "END 0.079 ---.--- ---.--- 13.141"
+            if (preg_match('/END\s+([0-9\.]+)\s+.*?([0-9\.]+)/i', $cleanText, $matches)) {
+                $distance = $matches[1];
+                $cumLoss = $matches[2];
+
+                // Validasi bahwa keduanya adalah angka valid
+                if (is_numeric($distance) && is_numeric($cumLoss)) {
+                    return [
+                        'distance' => str_replace(',', '.', $distance),
+                        'cum_loss' => str_replace(',', '.', $cumLoss),
+                    ];
+                }
+            }
+
+            // Fallback: Cari baris demi baris yang mengandung kata END
+            $lines = explode("\n", $text);
+            foreach ($lines as $line) {
+                if (stripos($line, 'END') !== false) {
+                    // Ambil semua angka desimal dalam baris tersebut
+                    preg_match_all('/\d+\.\d+/', $line, $matches);
+                    $numbers = $matches[0] ?? [];
+
+                    if (count($numbers) >= 2) {
+                        return [
+                            'distance' => str_replace(',', '.', $numbers[0]),
+                            'cum_loss' => str_replace(',', '.', $numbers[1]),
+                        ];
+                    }
+                }
+            }
+
+        } catch (Exception $e) {
+            // Abaikan error per file
+        }
+
+        return null;
+    }
+    private function resolveExcelRowByLineName($wsSummary, $lineName)
+    {
+        $lineNameUpper = strtoupper(trim($lineName));
+
+        // 1. Ekstraksi nomor core/line dari nama folder (misal: "Core 1", "Line-05", "C3", atau angka "3")
+        if (preg_match('/(?:CORE|LINE|C)[\s\-_]*(\d+)/i', $lineNameUpper, $match)) {
+            $number = (int) $match[1];
+
+            // Core 1-24 berada di baris 13 s.d. 36 (12 + nomor core)
+            if ($number >= 1 && $number <= 24) {
+                return 12 + $number;
+            }
+        }
+
+        // 2. Jika nama folder langsung berupa angka (misal folder "1", "2", "12")
+        if (is_numeric(trim($lineName))) {
+            $number = (int) trim($lineName);
+            if ($number >= 1 && $number <= 24) {
+                return 12 + $number;
+            }
+        }
+
+        // 3. Fallback: Pencarian teks langsung mencocokkan ke kolom C (Core) di dalam Excel
+        $highestRow = $wsSummary->getHighestRow();
+        for ($row = 13; $row <= $highestRow; $row++) {
+            $cellVal = strtoupper(trim($wsSummary->getCell('C' . $row)->getValue()));
+            if (!empty($cellVal) && (strpos($lineNameUpper, $cellVal) !== false || strpos($cellVal, $lineNameUpper) !== false)) {
+                return $row;
+            }
+        }
+
+        return null; // Mengembalikan null jika baris tidak ditemukan agar tidak menimpa data yang salah
+    }
+    private function parseCombinePdfPages($pdfPath)
+    {
+        $results = [];
+
+        try {
+            if (!file_exists($pdfPath)) {
+                return $results;
+            }
+
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($pdfPath);
+            $pages = $pdf->getPages();
+
+            foreach ($pages as $page) {
+                $text = $page->getText();
+
+                // 1. Ambil nama FAT dari baris "File Name:" (Contoh: "STA23 A01 1310.sor" -> menangkap "A01")
+                $lineName = null;
+                if (preg_match('/File Name:.*?([A-Z]\d+)/i', $text, $matchLine)) {
+                    $lineName = strtoupper($matchLine[1]);
+                } elseif (preg_match('/STA\d+\s+([A-Z]\d+)/i', $text, $matchLine)) {
+                    $lineName = strtoupper($matchLine[1]);
+                }
+
+                if (!$lineName) {
+                    continue;
+                }
+
+                // 2. Deteksi apakah halaman ini menggunakan 1310 atau 1550 berdasarkan teks "File Name:" atau "1310/1550"
+                $is1550 = (strpos($text, '1550') !== false);
+
+                // 3. Cari baris "END" di dalam Event List untuk mengambil Distance dan Cum Loss
+                $lines = explode("\n", $text);
+                $distance = null;
+                $cumLoss = null;
+
+                foreach ($lines as $line) {
+                    if (preg_match('/\bEND\b/i', $line)) {
+                        preg_match_all('/\d+\.\d+/', $line, $numMatches);
+                        $numbers = $numMatches[0] ?? [];
+
+                        if (count($numbers) >= 2) {
+                            $distance = $numbers[0];
+                            $cumLoss = $numbers[1];
+                            break;
+                        }
+                    }
+                }
+
+                if ($distance !== null && $cumLoss !== null) {
+                    // Simpan data berdasarkan nama FAT dan jenis gelombangnya
+                    $results[$lineName] = [
+                        'distance' => str_replace(',', '.', $distance),
+                        'cum_loss' => str_replace(',', '.', $cumLoss),
+                        'is_1550' => $is1550,
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            // Abaikan error per halaman
+        }
+
+        return $results;
     }
 }
