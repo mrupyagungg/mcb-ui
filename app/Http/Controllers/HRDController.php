@@ -378,15 +378,33 @@ class HRDController extends Controller
             ->select(
                 'absensis.*',
                 'users.name',
-                'users.email'
+                'users.email',
+                'users.position',
+                'users.vendor',
+                'users.region'
             );
 
-        // Filter tanggal
+        // Filter Position
+        if ($request->filled('position')) {
+            $query->where('users.position', $request->position);
+        }
+
+        // Filter Vendor
+        if ($request->filled('vendor')) {
+            $query->where('users.vendor', $request->vendor);
+        }
+
+        // Filter Region
+        if ($request->filled('region')) {
+            $query->where('users.region', $request->region);
+        }
+
+        // Filter Tanggal
         if ($request->filled('tanggal')) {
             $query->whereDate('absensis.tanggal', $request->tanggal);
         }
 
-        // Filter nama karyawan
+        // Filter Nama atau Email
         if ($request->filled('search')) {
             $search = $request->search;
 
@@ -402,7 +420,37 @@ class HRDController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('hrd.riwayat-absensi', compact('riwayat'));
+        // Data pilihan filter
+        $positions = DB::table('users')
+            ->where('role', 'employee')
+            ->whereNotNull('position')
+            ->where('position', '!=', '')
+            ->distinct()
+            ->orderBy('position')
+            ->pluck('position');
+
+        $vendors = DB::table('users')
+            ->where('role', 'employee')
+            ->whereNotNull('vendor')
+            ->where('vendor', '!=', '')
+            ->distinct()
+            ->orderBy('vendor')
+            ->pluck('vendor');
+
+        $regions = DB::table('users')
+            ->where('role', 'employee')
+            ->whereNotNull('region')
+            ->where('region', '!=', '')
+            ->distinct()
+            ->orderBy('region')
+            ->pluck('region');
+
+        return view('hrd.riwayat-absensi', compact(
+            'riwayat',
+            'positions',
+            'vendors',
+            'regions'
+        ));
     }
 
     /*
@@ -734,5 +782,6 @@ class HRDController extends Controller
 
         return 'AST-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
+
 
 }
