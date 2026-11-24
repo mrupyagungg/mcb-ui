@@ -441,8 +441,8 @@
 
                             @auth
 
-                                @if (auth()->user()->role === 'admin')
-                                    <a class="login-btn" href="{{ url('/admin/dashboard') }}" title="Admin Dashboard">
+                                @if (auth()->user()->role === 'hrd')
+                                    <a class="login-btn" href="{{ url('/hrd/dashboard') }}" title="HRD Dashboard">
 
                                         <i class="fas fa-user-circle"></i>
                                         <span>Login</span>
@@ -556,8 +556,8 @@
 
                                 @auth
 
-                                    @if (auth()->user()->role === 'admin')
-                                        <a class="login-btn" href="{{ url('/admin/dashboard') }}" title="Admin Dashboard">
+                                    @if (auth()->user()->role === 'hrd')
+                                        <a class="login-btn" href="{{ url('/hrd/dashboard') }}" title="HRD Dashboard">
 
                                             <i class="fas fa-user-circle"></i>
                                             <span>Login</span>

@@ -154,13 +154,13 @@
             </form>
 
             {{-- TABEL KARYAWAN --}}
-
             <div class="table-responsive">
                 <table class="table table-bordered table-hover table-striped">
                     <thead class="bg-light">
                         <tr>
                             <th class="text-center">No</th>
                             <th>Nama Karyawan</th>
+                            <th>Jenis Kelamin</th>
                             <th>ID Employee</th>
                             <th>Position</th>
                             <th>Vendor</th>
@@ -170,90 +170,114 @@
                             <th>ID Number</th>
                             <th>Bank</th>
                             <th>No Rekening</th>
-                            <th>Start Date</th>
+                            {{-- <th>Start Date</th> --}}
                             <th class="text-center">Role</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center" style="width: 120px;">Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @forelse($karyawan as $index => $item)
-                                            <tr>
-                                                {{-- NOMOR --}}
-                                                <td class="text-center">
-                                                    {{ $karyawan->firstItem() + $index }}
-                                                </td>
+                            <tr>
+                                {{-- NOMOR --}}
+                                <td class="text-center">
+                                    {{ $karyawan->firstItem() + $index }}
+                                </td>
 
-                                                {{-- NAMA --}}
-                                                <td style="min-width: 200px;">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="mr-2">
-                                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                                                style="width: 38px; height: 38px; font-weight: bold;">
-                                                                {{ strtoupper(substr($item->name ?? '-', 0, 1)) }}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <strong>{{ $item->name ?? '-' }}</strong>
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                ID: {{ $item->id }}
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                {{-- NAMA --}}
+                                <td style="min-width: 200px;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-2">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                                style="width: 38px; height: 38px; font-weight: bold;">
+                                                {{ strtoupper(substr($item->name ?? '-', 0, 1)) }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ $item->name ?? '-' }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                ID: {{ $item->id }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
 
-                                                {{-- ID EMPLOYEE --}}
-                                                <td>{{ $item->employee_id ?? '-' }}</td>
+                                {{-- jenis kelamin --}}
+                                <td>{{ $item->jenis_kelamin ?? '-' }}</td>
 
-                                                {{-- POSITION --}}
-                                                <td>{{ $item->position ?? '-' }}</td>
+                                {{-- ID EMPLOYEE --}}
+                                <td>{{ $item->employee_id ?? '-' }}</td>
 
-                                                {{-- VENDOR --}}
-                                                <td>{{ $item->vendor ?? '-' }}</td>
+                                {{-- POSITION --}}
+                                <td>{{ $item->position ?? '-' }}</td>
 
-                                                {{-- region --}}
-                                                <td>{{ $item->region ?? '-' }}</td>
+                                {{-- VENDOR --}}
+                                <td>{{ $item->vendor ?? '-' }}</td>
 
-                                                {{-- EMAIL --}}
-                                                <td style="min-width: 200px;">
-                                                    <i class="far fa-envelope text-muted mr-1"></i>
-                                                    {{ $item->email ?? '-' }}
-                                                </td>
+                                {{-- region --}}
+                                <td>{{ $item->region ?? '-' }}</td>
 
-                                                {{-- PHONE --}}
-                                                <td>{{ $item->phone ?? '-' }}</td>
+                                {{-- EMAIL --}}
+                                <td style="min-width: 200px;">
+                                    <i class="far fa-envelope text-muted mr-1"></i>
+                                    {{ $item->email ?? '-' }}
+                                </td>
 
-                                                {{-- ID NUMBER --}}
-                                                <td>{{ $item->id_number ?? '-' }}</td>
+                                {{-- PHONE --}}
+                                <td>{{ $item->phone ?? '-' }}</td>
 
-                                                {{-- BANK --}}
-                                                <td>{{ $item->bank ?? '-' }}</td>
+                                {{-- ID NUMBER --}}
+                                <td>{{ $item->id_number ?? '-' }}</td>
 
-                                                {{-- NO REKENING --}}
-                                                <td>{{ $item->no_rekening ?? '-' }}</td>
+                                {{-- BANK --}}
+                                <td>{{ $item->bank ?? '-' }}</td>
 
-                                                {{-- START DATE --}}
-                                                <td>
-                                                    {{ $item->start_date
-                            ? \Carbon\Carbon::parse($item->start_date)->format('d/m/Y')
-                            : '-' }}
-                                                </td>
-                                                {{-- ROLE --}}
-                                                <td class="text-center">
-                                                    <span class="badge badge-info">
-                                                        {{ ucfirst($item->role ?? '-') }}
-                                                    </span>
-                                                </td>
+                                {{-- NO REKENING --}}
+                                <td>{{ $item->no_rekening ?? '-' }}</td>
 
-                                                {{-- STATUS --}}
-                                                <td class="text-center">
-                                                    <span class="badge badge-success">
-                                                        <i class="fas fa-check-circle mr-1"></i>
-                                                        Terdaftar
-                                                    </span>
-                                                </td>
-                                            </tr>
+                                {{-- START DATE --}}
+                                {{-- <td>
+                                    {{ $item->start_date
+                                    ? \Carbon\Carbon::parse($item->start_date)->format('d/m/Y')
+                                    : '-' }} --}}
+                                </td>
+                                {{-- ROLE --}}
+                                <td class="text-center">
+                                    <span class="badge badge-info">
+                                        {{ ucfirst($item->role ?? '-') }}
+                                    </span>
+                                </td>
+
+                                {{-- STATUS --}}
+                                <td class="text-center">
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Terdaftar
+                                    </span>
+                                </td>
+                                {{-- ACTION --}}
+                                <td class="text-center">
+                                    {{-- SHOW --}}
+                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
+                                        data-target="#modalShowKaryawan{{ $item->id }}" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+
+                                    {{-- EDIT --}}
+                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+                                        data-target="#modalEditKaryawan{{ $item->id }}" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    {{-- DELETE --}}
+                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                        data-target="#modalDeleteKaryawan{{ $item->id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
                                 <td colspan="14" class="text-center py-5">
@@ -272,7 +296,6 @@
                     </tbody>
                 </table>
             </div>
-
 
             {{-- PAGINATION --}}
             <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
@@ -359,117 +382,350 @@ MODAL IMPORT EXCEL
     </div>
 </div>
 
-{{-- =========================================================
-MODAL CREATE DATA KARYAWAN
-========================================================= --}}
+
+{{-- MODAL CREATE KARYAWAN --}}
 <div class="modal fade" id="modalCreateKaryawan" tabindex="-1" role="dialog" aria-labelledby="modalCreateKaryawanLabel"
     aria-hidden="true">
-
-    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-
-            {{-- HEADER --}}
-            <div class="modal-header bg-primary">
-                <h5 class="modal-title font-weight-bold" id="modalCreateKaryawanLabel">
-                    <i class="fas fa-user-plus mr-2"></i>
-                    Create Data Karyawan
-                </h5>
-
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-
-            {{-- FORM CREATE --}}
             <form action="{{ route('hrd.karyawan.store') }}" method="POST">
                 @csrf
 
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Akun karyawan akan dibuat dengan role
-                        <strong>Employee</strong> secara otomatis.
-                    </div>
-
-                    {{-- NAMA --}}
-                    <div class="form-group">
-                        <label for="name">
-                            Nama Lengkap <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="text" name="name" id="name"
-                            class="form-control @error('name') is-invalid @enderror"
-                            placeholder="Masukkan nama lengkap karyawan" value="{{ old('name') }}" required>
-
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- EMAIL --}}
-                    <div class="form-group">
-                        <label for="email">
-                            Email <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="email" name="email" id="email"
-                            class="form-control @error('email') is-invalid @enderror" placeholder="contoh@email.com"
-                            value="{{ old('email') }}" required>
-
-                        @error('email')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- PASSWORD --}}
-                    <div class="form-group">
-                        <label for="password">
-                            Password <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="password" name="password" id="password"
-                            class="form-control @error('password') is-invalid @enderror"
-                            placeholder="Minimal 8 karakter" required>
-
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- KONFIRMASI PASSWORD --}}
-                    <div class="form-group">
-                        <label for="password_confirmation">
-                            Konfirmasi Password <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="password" name="password_confirmation" id="password_confirmation"
-                            class="form-control" placeholder="Masukkan ulang password" required>
-                    </div>
-
-                    <small class="text-muted">
-                        <i class="fas fa-shield-alt mr-1"></i>
-                        Password akan disimpan dalam bentuk terenkripsi.
-                    </small>
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold" id="modalCreateKaryawanLabel">
+                        <i class="fas fa-user-plus mr-2"></i> Tambah Karyawan
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
 
-                {{-- FOOTER --}}
+                <div class="modal-body">
+                    <div class="row">
+                        {{-- EMPLOYEE ID --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Employee ID</label>
+                                <input type="text" id="create_employee_id" class="form-control"
+                                    value="{{ $nextEmployeeId }}" readonly>
+                                <small class="text-muted">Employee ID dibuat otomatis oleh sistem.</small>
+                            </div>
+                        </div>
+
+                        {{-- NAMA --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" placeholder="Masukkan nama lengkap"
+                                    required>
+                            </div>
+                        </div>
+
+                        {{-- POSITION --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Position</label>
+                                <input type="text" name="position" class="form-control"
+                                    placeholder="Masukkan posisi/jabatan">
+                            </div>
+                        </div>
+
+                        {{-- VENDOR --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Vendor</label>
+                                <input type="text" name="vendor" class="form-control" placeholder="Masukkan vendor">
+                            </div>
+                        </div>
+
+                        {{-- REGION --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Region</label>
+                                <input type="text" name="region" class="form-control" placeholder="Masukkan region">
+                            </div>
+                        </div>
+
+                        {{-- JENIS KELAMIN --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select name="jenis_kelamin" class="form-control">
+                                    <option value="">-- Pilih Jenis Kelamin --</option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- PHONE --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="text" name="phone" class="form-control"
+                                    placeholder="Masukkan nomor telepon">
+                            </div>
+                        </div>
+
+                        {{-- ID NUMBER --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>ID Number</label>
+                                <input type="text" name="id_number" class="form-control"
+                                    placeholder="Masukkan nomor identitas">
+                            </div>
+                        </div>
+
+                        {{-- BANK --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Bank</label>
+                                <input type="text" name="bank" class="form-control" placeholder="Masukkan nama bank">
+                            </div>
+                        </div>
+
+                        {{-- NO REKENING --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No Rekening</label>
+                                <input type="text" name="no_rekening" class="form-control"
+                                    placeholder="Masukkan nomor rekening">
+                            </div>
+                        </div>
+
+                        {{-- ALAMAT --}}
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Alamat</label>
+                                <textarea name="alamat" class="form-control" rows="2"
+                                    placeholder="Masukkan alamat lengkap"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr>
+                            <h6 class="font-weight-bold mb-3">
+                                <i class="fas fa-lock mr-1"></i> Informasi Akun
+                            </h6>
+                        </div>
+
+                        {{-- EMAIL --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" placeholder="Masukkan email"
+                                    required>
+                            </div>
+                        </div>
+
+                        {{-- PASSWORD --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control"
+                                    placeholder="Minimal 8 karakter" required>
+                            </div>
+                        </div>
+
+                        {{-- KONFIRMASI PASSWORD --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Konfirmasi Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password_confirmation" class="form-control"
+                                    placeholder="Ulangi password" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>
-                        Batal
+                        <i class="fas fa-times mr-1"></i> Batal
                     </button>
-
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i>
-                        Buat Karyawan
+                        <i class="fas fa-save mr-1"></i> Simpan Karyawan
                     </button>
                 </div>
-
             </form>
-
         </div>
     </div>
 </div>
+
+{{-- =========================================================
+MODAL SHOW, EDIT, DAN DELETE KARYAWAN
+========================================================= --}}
+@foreach($karyawan as $item)
+
+    {{-- MODAL SHOW --}}
+    <div class="modal fade" id="modalShowKaryawan{{ $item->id }}" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-user mr-2"></i>Detail Karyawan
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        @foreach([
+                                'name' => 'Nama Karyawan',
+                                'jenis_kelamin' => 'Jenis Kelamin',
+                                'employee_id' => 'ID Employee',
+                                'position' => 'Position',
+                                'vendor' => 'Vendor',
+                                'region' => 'Region',
+                                'email' => 'Email',
+                                'phone' => 'Phone',
+                                'id_number' => 'ID Number',
+                                'bank' => 'Bank',
+                                'no_rekening' => 'No Rekening',
+                                'role' => 'Role'
+                            ] as $field => $label)
+                            <div class="col-md-6 mb-3">
+                                <small class="text-muted">{{ $label }}</small>
+                                <div class="font-weight-bold">{{ $item->$field ?? '-' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL EDIT --}}
+    <div class="modal fade" id="modalEditKaryawan{{ $item->id }}" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form action="{{ route('hrd.karyawan.update', $item->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-edit mr-2"></i>Edit Data Karyawan
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row">
+                            @foreach([
+                                    'name' => 'Nama Karyawan',
+                                    'employee_id' => 'ID Employee',
+                                    'position' => 'Position',
+                                    'vendor' => 'Vendor',
+                                    'region' => 'Region',
+                                    'email' => 'Email',
+                                    'phone' => 'Phone',
+                                    'id_number' => 'ID Number',
+                                    'bank' => 'Bank',
+                                    'no_rekening' => 'No Rekening'
+                                ] as $field => $label)
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>{{ $label }}</label>
+                                        <input type="text" name="{{ $field }}" class="form-control" value="{{ $item->$field }}">
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Jenis Kelamin</label>
+                                    <select name="jenis_kelamin" class="form-control">
+                                        <option value="Laki-laki" {{ $item->jenis_kelamin == 'Laki-laki' ? 'selected' : '' }}>
+                                            Laki-laki</option>
+                                        <option value="Perempuan" {{ $item->jenis_kelamin == 'Perempuan' ? 'selected' : '' }}>
+                                            Perempuan</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Role</label>
+                                    <select name="role" class="form-control">
+                                        @foreach(['employee', 'admin', 'superadmin', 'hrd'] as $role)
+                                            <option value="{{ $role }}" {{ $item->role == $role ? 'selected' : '' }}>
+                                                {{ ucfirst($role) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save mr-1"></i>Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL DELETE --}}
+    <div class="modal fade" id="modalDeleteKaryawan{{ $item->id }}" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form action="{{ route('hrd.karyawan.destroy', $item->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+
+                    <div class="modal-header bg-danger">
+                        <h5 class="modal-title text-white">
+                            <i class="fas fa-trash mr-2"></i>Hapus Karyawan
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5>Apakah Anda yakin?</h5>
+                        <p>Data karyawan berikut akan dihapus:</p>
+                        <strong>{{ $item->name }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            ID Employee: {{ $item->employee_id ?? '-' }}
+                        </small>
+                    </div>
+
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash mr-1"></i>Ya, Hapus
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+@endforeach
+
+
+
 
 @stop
 

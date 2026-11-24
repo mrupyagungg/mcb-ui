@@ -25,6 +25,8 @@ class User extends Authenticatable
         'id_number',
         'employee_id',
         'start_date',
+        'jenis_kelamin',
+        'alamat',
     ];
 
     protected $hidden = [
@@ -37,6 +39,8 @@ class User extends Authenticatable
         'password' => 'hashed',
         'last_seen_at' => 'datetime',
         'start_date' => 'date',
+        'jenis_kelamin' => 'string',
+        'alamat' => 'string',
     ];
 
     public function getInitialsAttribute()
@@ -55,5 +59,9 @@ class User extends Authenticatable
     {
         return $this->last_seen_at &&
             $this->last_seen_at->gt(now()->subMinutes(5));
+    }
+    public function assets()
+    {
+        return $this->hasMany(Asset::class, 'assigned_to');
     }
 }
