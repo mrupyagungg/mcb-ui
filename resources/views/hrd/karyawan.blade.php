@@ -43,6 +43,69 @@
         </div>
     @endif
 
+
+    {{-- DAFTAR DATA YANG DILEWATI --}}
+    @if(session('data_dilewati') && count(session('data_dilewati')) > 0)
+
+        <div class="card card-outline card-warning shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                    Detail Data Import yang Dilewati
+                </h3>
+
+                <div class="card-tools">
+                    <span class="badge badge-warning">
+                        {{ count(session('data_dilewati')) }} Data Dilewati
+                    </span>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Berikut adalah data dari Excel yang tidak berhasil diimpor beserta alasan masing-masing.
+                    Silakan perbaiki data tersebut sebelum melakukan import ulang.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="bg-light">
+                            <tr>
+                                <th width="50">No.</th>
+                                <th width="100">Baris Excel</th>
+                                <th>Employee ID</th>
+                                <th>Nama Karyawan</th>
+                                <th>Alasan Data Dilewati</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach(session('data_dilewati') as $index => $data)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $data['baris'] }}</td>
+                                    <td>{{ $data['employee_id'] }}</td>
+                                    <td>{{ $data['nama'] }}</td>
+                                    <td>
+                                        <span class="badge badge-warning">
+                                            {{ $data['alasan'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    @endif
+
+
     {{-- KREDENSIAL HASIL IMPORT --}}
     @if(session('kredensial_import'))
         <div class="card card-outline card-success shadow-sm">

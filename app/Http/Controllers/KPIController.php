@@ -104,6 +104,27 @@ class KPIController extends Controller
             ->with('success', 'Indikator KPI berhasil diperbarui.');
     }
 
+    public function penilaian()
+    {
+        $employees = \App\Models\User::orderBy('name')->get();
+
+        $periods = \DB::table('kpi_periods')
+            ->where('is_active', 1)
+            ->orderByDesc('id')
+            ->get();
+
+        $indikators = KPIIndicator::where('is_active', true)
+            ->orderBy('kategori')
+            ->orderBy('nama')
+            ->get();
+
+        return view('hrd.kpi.penilaian', compact(
+            'employees',
+            'periods',
+            'indikators'
+        ));
+    }
+
     public function destroyIndikator($id)
     {
         $indikator = KPIIndicator::findOrFail($id);

@@ -60,6 +60,7 @@ class HRDController extends Controller
         ));
     }
 
+
     public function importKaryawan(Request $request)
     {
         $request->validate([
@@ -82,18 +83,15 @@ class HRDController extends Controller
         $dilewati = 0;
         $kredensial = [];
         $employeeIdsTerbaca = [];
+        $dataDilewati = [];
 
         $highestRow = $sheet->getHighestDataRow();
 
-        DB::transaction(function () use ($sheet, $highestRow, &$berhasil, &$dilewati, &$kredensial, &$employeeIdsTerbaca) {
+        DB::transaction(function () use ($sheet, $highestRow, &$berhasil, &$dilewati, &$kredensial, &$employeeIdsTerbaca, &$dataDilewati) {
             for ($row = 4; $row <= $highestRow; $row++) {
 
-                // B sampai M
+                // Baca data Excel
                 $name = trim((string) $sheet->getCell("B{$row}")->getFormattedValue());
-
-                if ($name === '') {
-                    continue;
-                }
 
                 $position = trim((string) $sheet->getCell("C{$row}")->getFormattedValue());
                 $vendor = trim((string) $sheet->getCell("D{$row}")->getFormattedValue());
@@ -104,49 +102,95 @@ class HRDController extends Controller
                 $idNumber = trim((string) $sheet->getCell("I{$row}")->getFormattedValue());
                 $employeeId = trim((string) $sheet->getCell("J{$row}")->getFormattedValue());
 
-                // Tanda "-" dianggap data kosong
-                $position = $position === '-' ? null : $position;
-                $vendor = $vendor === '-' ? null : $vendor;
-                $region = $region === '-' ? null : $region;
-                $noRekening = $noRekening === '-' ? null : $noRekening;
-                $bank = $bank === '-' ? null : $bank;
-                $phone = $phone === '-' ? null : $phone;
-                $idNumber = $idNumber === '-' ? null : $idNumber;
-                $employeeId = $employeeId === '-' ? null : $employeeId;
+                // Abaikan baris yang benar-benar kosong
+                $adaIsi = false;
 
-                // NIK wajib diisi
-                if (empty($idNumber)) {
-                    $dilewati++;
+                foreach (range('B', 'M') as $column) {
+                    if (trim((string) $sheet->getCell("{$column}{$row}")->getFormattedValue()) !== '') {
+                        $adaIsi = true;
+                        break;
+                    }
+                }
+
+                if (!$adaIsi) {
                     continue;
                 }
 
-                // Generate Employee ID jika Excel kosong atau "-"
+                // Fungsi pencatatan data yang dilewati
+                $catatDilewati = function ($alasan) use (&$dilewati, &$dataDilewati, $row, $name, $employeeId) {
+                    $dilewati++;
+
+                    $dataDilewati[] = [
+                        'baris' => $row,
+                        'employee_id' => $employeeId !== '' && $employeeId !== '-' ? $employeeId : '-',
+                        'nama' => $name !== '' ? $name : '-',
+                        'alasan' => $alasan,
+                    ];
+                };
+
+                // Nama wajib diisi
+                if ($name === '') {
+                    $catatDilewati('Nama karyawan kosong.');
+                    continue;
+                }
+
+                // Tanda "-" dianggap data kosong
+                $position = $position === '-' || $position === '' ? null : $position;
+                $vendor = $vendor === '-' || $vendor === '' ? null : $vendor;
+                $region = $region === '-' || $region === '' ? null : $region;
+                $noRekening = $noRekening === '-' || $noRekening === '' ? null : $noRekening;
+                $bank = $bank === '-' || $bank === '' ? null : $bank;
+                $phone = $phone === '-' || $phone === '' ? null : $phone;
+                $idNumber = $idNumber === '-' || $idNumber === '' ? null : $idNumber;
+                $employeeId = $employeeId === '-' || $employeeId === '' ? null : $employeeId;
+
+                // NIK wajib diisi
+                if (empty($idNumber)) {
+                    $catatDilewati('NIK kosong. NIK wajib diisi untuk membuat akun karyawan.');
+                    continue;
+                }
+
+                // Generate Employee ID jika Excel kosong
                 if (empty($employeeId)) {
                     $employeeId = $this->generateEmployeeId();
                 }
 
-                // Cegah ID karyawan duplikat
-                if (
-                    in_array($employeeId, $employeeIdsTerbaca, true) ||
-                    User::where('employee_id', $employeeId)->exists()
-                ) {
-                    $dilewati++;
+                // Cegah Employee ID duplikat dalam Excel
+                if (in_array($employeeId, $employeeIdsTerbaca, true)) {
+                    $catatDilewati('Employee ID duplikat dalam file Excel.');
                     continue;
                 }
 
-                $employeeIdsTerbaca[] = $employeeId;
+                // Cegah Employee ID yang sudah ada di database
+                if (User::where('employee_id', $employeeId)->exists()) {
+                    $catatDilewati('Employee ID sudah terdaftar di database.');
+                    continue;
+                }
 
                 // Email menggunakan NIK
                 $email = $idNumber . '@employee.mcb-id.com';
 
-                // Cegah NIK/email duplikat
-                if (
-                    User::where('email', $email)->exists() ||
-                    User::where('id_number', $idNumber)->exists()
-                ) {
-                    $dilewati++;
+                // Cegah NIK atau Email duplikat
+                $emailExists = User::where('email', $email)->exists();
+                $nikExists = User::where('id_number', $idNumber)->exists();
+
+                if ($nikExists && $emailExists) {
+                    $catatDilewati('NIK dan Email sudah terdaftar di database.');
                     continue;
                 }
+
+                if ($nikExists) {
+                    $catatDilewati('NIK sudah digunakan oleh karyawan lain.');
+                    continue;
+                }
+
+                if ($emailExists) {
+                    $catatDilewati('Email sudah digunakan oleh akun lain.');
+                    continue;
+                }
+
+                // Tandai Employee ID yang sudah diproses
+                $employeeIdsTerbaca[] = $employeeId;
 
                 // Baca tanggal Excel (Kolom K)
                 $dateValue = $sheet->getCell("K{$row}")->getValue();
@@ -177,7 +221,6 @@ class HRDController extends Controller
                     ? null
                     : $jenisKelamin;
 
-                // Normalisasi jenis kelamin
                 if ($jenisKelamin !== null) {
                     $jenisKelamin = strtolower($jenisKelamin);
 
@@ -202,7 +245,7 @@ class HRDController extends Controller
                 // Password awal menggunakan NIK
                 $password = $idNumber;
 
-                $user = User::create([
+                User::create([
                     'name' => $name,
                     'email' => $email,
                     'password' => Hash::make($password),
@@ -220,7 +263,7 @@ class HRDController extends Controller
                     'alamat' => $alamat,
                 ]);
 
-                // Simpan kredensial untuk ditampilkan setelah import
+                // Simpan kredensial
                 $kredensial[] = [
                     'name' => $name,
                     'email' => $email,
@@ -234,7 +277,8 @@ class HRDController extends Controller
         return redirect()
             ->route('hrd.karyawan')
             ->with('success', "Import selesai. {$berhasil} karyawan berhasil ditambahkan dan {$dilewati} data dilewati.")
-            ->with('kredensial_import', $kredensial);
+            ->with('kredensial_import', $kredensial)
+            ->with('data_dilewati', $dataDilewati);
     }
 
     public function karyawan(Request $request)
