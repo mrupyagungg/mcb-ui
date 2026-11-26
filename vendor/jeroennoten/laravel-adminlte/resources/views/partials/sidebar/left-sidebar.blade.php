@@ -11,9 +11,9 @@
     <div class="sidebar">
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column {{ config('adminlte.classes_sidebar_nav', '') }}"
-                data-widget="treeview" role="menu" @if (config('adminlte.sidebar_nav_animation_speed') != 300)
-                data-animation-speed="{{ config('adminlte.sidebar_nav_animation_speed') }}" @endif
-               @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
+                data-widget="treeview" role="menu"
+                @if (config('adminlte.sidebar_nav_animation_speed') != 300) data-animation-speed="{{ config('adminlte.sidebar_nav_animation_speed') }}" @endif
+                @if (!config('adminlte.sidebar_nav_accordion')) data-accordion="false" @endif>
 
                 @auth
                     {{-- ========================================== --}}
@@ -63,7 +63,6 @@
                     {{-- ========================================== --}}
 
                     @if ($role === 'hrd')
-
                         {{-- DASHBOARD --}}
                         <li class="nav-item">
                             <a href="{{ route('hrd.dashboard') }}"
@@ -97,6 +96,15 @@
                                 class="nav-link {{ request()->routeIs('hrd.assets*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-boxes"></i>
                                 <p>Assets</p>
+                            </a>
+                        </li>
+
+                        {{-- Team Management --}}
+                        <li class="nav-item">
+                            <a href="{{ route('hrd.team-management.index') }}"
+                                class="nav-link {{ request()->routeIs('hrd.team-management.index') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-users-cog"></i>
+                                <p>Team Management</p>
                             </a>
                         </li>
 
@@ -159,7 +167,6 @@
                                 <p>Laporan</p>
                             </a>
                         </li>
-
                     @endif
 
 
@@ -168,7 +175,8 @@
                     {{-- ========================================== --}}
                     @if ($role === 'admin')
                         {{-- ================= MANAJEMEN DOKUMEN ================= --}}
-                        <li class="nav-header text-uppercase font-weight-bold text-md tracking-wider text-slate-00 mt-3 px-3">
+                        <li
+                            class="nav-header text-uppercase font-weight-bold text-md tracking-wider text-slate-00 mt-3 px-3">
                             Manajemen Dokumen
                         </li>
 
@@ -177,7 +185,8 @@
                             $isMasterDataActive =
                                 request()->routeIs('admin.masterdata*') || request()->routeIs('admin.template*');
                         @endphp
-                        <li class="nav-item {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'menu-open' : '' }}">
+                        <li
+                            class="nav-item {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'menu-open' : '' }}">
                             <a href="#"
                                 class="nav-link rounded-xl transition-all duration-200 {{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'bg-indigo-600/10 text-indigo-600 font-semibold shadow-sm' : 'text-slate-600 hover:bg-slate-100' }}"
                                 style="{{ $isMasterDataActive || request()->routeIs('admin.cwatp') ? 'background-color: rgba(79, 70, 229, 0.1) !important; color: #4f46e5 !important;' : '' }}">
@@ -271,7 +280,8 @@
 
 
                         {{-- ================= ADMINISTRASI ================= --}}
-                        <li class="nav-header text-uppercase font-weight-bold text-md tracking-wider text-slate-400 mt-4 px-3">
+                        <li
+                            class="nav-header text-uppercase font-weight-bold text-md tracking-wider text-slate-400 mt-4 px-3">
                             Administrasi
                         </li>
 
@@ -294,7 +304,8 @@
                             </a>
 
                             <!-- Form Logout Tersembunyi (Wajib ada untuk metode POST Laravel) -->
-                            <form id="sidebar-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            <form id="sidebar-logout-form" action="{{ route('logout') }}" method="POST"
+                                class="d-none">
                                 @csrf
                             </form>
                         </div>

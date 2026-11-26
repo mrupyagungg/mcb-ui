@@ -10,6 +10,7 @@ use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\HRDController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\TeamManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,6 +142,95 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/absensi/keluar', [AbsensiController::class, 'keluar'])
             ->name('absensi.keluar');
     });
+
+
+    // ======================================================
+// TEAM MANAGEMENT
+// ======================================================
+
+    Route::middleware(['auth'])
+        ->prefix('hrd/team-management')
+        ->name('hrd.team-management.')
+        ->group(function () {
+
+            // Halaman utama
+            Route::get('/', [TeamManagementController::class, 'index'])
+                ->name('index');
+
+            // Membuat tim
+            Route::post('/', [TeamManagementController::class, 'store'])
+                ->name('store');
+
+            // Mengubah tim
+            Route::put('/{team}', [TeamManagementController::class, 'update'])
+                ->name('update');
+
+            // Menonaktifkan tim
+            Route::delete('/{team}', [TeamManagementController::class, 'destroy'])
+                ->name('destroy');
+
+            // Menambahkan anggota
+            Route::post('/{team}/members', [TeamManagementController::class, 'addMember'])
+                ->name('members.store');
+
+            // Memindahkan anggota
+            Route::post('/members/{teamMember}/transfer', [TeamManagementController::class, 'transferMember'])
+                ->name('members.transfer');
+
+            // Mengeluarkan anggota
+            Route::delete('/members/{teamMember}', [TeamManagementController::class, 'removeMember'])
+                ->name('members.remove');
+        });
+
+
+
+    Route::middleware(['auth'])
+        ->prefix('hrd/team-management')
+        ->name('hrd.team-management.')
+        ->group(function () {
+
+            // Halaman utama
+            Route::get('/', [TeamManagementController::class, 'index'])
+                ->name('index');
+
+            // Membuat tim
+            Route::post('/', [TeamManagementController::class, 'store'])
+                ->name('store');
+
+            // Mengedit tim
+            Route::put('/{team}', [TeamManagementController::class, 'update'])
+                ->name('update');
+
+            // Menonaktifkan tim
+            Route::patch('/{team}/deactivate', [TeamManagementController::class, 'deactivate'])
+                ->name('deactivate');
+
+            // Mengaktifkan kembali tim
+            Route::patch('/{team}/activate', [TeamManagementController::class, 'activate'])
+                ->name('activate');
+
+            // Menghapus tim secara permanen
+            Route::delete('/{team}', [TeamManagementController::class, 'destroy'])
+                ->name('destroy');
+
+            // Menambahkan anggota ke tim
+            Route::post('/{team}/members', [TeamManagementController::class, 'addMember'])
+                ->name('members.store');
+
+            // Memindahkan anggota ke tim lain
+            Route::post('/members/{teamMember}/transfer', [TeamManagementController::class, 'transferMember'])
+                ->name('members.transfer');
+
+            // Mengeluarkan anggota dari tim
+            Route::delete('/members/{teamMember}', [TeamManagementController::class, 'removeMember'])
+                ->name('members.remove');
+
+            // Menghapus riwayat penempatan anggota
+            Route::delete('/members/{teamMember}/history', [TeamManagementController::class, 'destroyMemberHistory'])
+                ->name('members.destroy');
+
+        });
+
 
 
     /*
