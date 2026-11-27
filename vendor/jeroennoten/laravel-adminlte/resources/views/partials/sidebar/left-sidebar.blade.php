@@ -56,6 +56,13 @@
                                 <p>Riwayat</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('employee.profile') }}"
+                                class="nav-link {{ request()->routeIs('employee.profile') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-edit"></i>
+                                <p>Edit Profile</p>
+                            </a>
+                        </li>
                     @endif
 
                     {{-- ========================================== --}}

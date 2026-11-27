@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -565,4 +567,87 @@ class AbsensiController extends Controller
             'jam_keluar' => $absensi->jam_keluar,
         ]);
     }
+
+    /**
+     * Halaman Edit Profile Employee
+     */
+
+    /**
+     * Halaman Profile Employee
+     */
+    public function profile()
+    {
+        $user = Auth::user();
+
+        return view('employee.profile', compact('user'));
+    }
+
+    /**
+     * Update Profile Employee
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        unset($validated['photo']);
+
+        if ($request->hasFile('photo')) {
+            $newPhoto = $request->file('photo')->store('profile', 'public');
+
+            if ($user->photo && Storage::disk('public')->exists($user->photo)) {
+                Storage::disk('public')->delete($user->photo);
+            }
+
+            $validated['photo'] = $newPhoto;
+        }
+
+        $user->update($validated);
+
+        return redirect()
+            ->route('employee.profile')
+            ->with('success', 'Profile berhasil diperbarui.');
+    }
+
+
+    /**
+     * Update Password Employee
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()
+                ->withErrors([
+                    'current_password' => 'Password lama tidak sesuai.',
+                ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()
+            ->route('employee.profile')
+            ->with('success', 'Password berhasil diperbarui.');
+    }
+
 }

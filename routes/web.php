@@ -115,25 +115,37 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/opmc/generate-excel', [AdminController::class, 'generateExcel'])->name('opmc.generate-excel');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | employee
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware('role:employee')
+
+    // EMPLOYEE
+    Route::middleware(['auth', 'role:employee'])
         ->prefix('employee')
         ->group(function () {
 
+            // Dashboard
             Route::get('/dashboard', [AbsensiController::class, 'dashboard'])
                 ->name('employee.dashboard');
 
+            // Attendance
             Route::get('/attendance', [AbsensiController::class, 'index'])
                 ->name('employee.attendance');
 
+            // Riwayat
             Route::get('/riwayat', [AbsensiController::class, 'riwayat'])
                 ->name('employee.history');
+
+            // Profile
+            Route::get('/profile', [AbsensiController::class, 'profile'])
+                ->name('employee.profile');
+
+            Route::put('/profile/update', [AbsensiController::class, 'updateProfile'])
+                ->name('employee.profile.update');
+
+            Route::put('/profile/password', [AbsensiController::class, 'updatePassword'])
+                ->name('employee.profile.password');
+
         });
 
+    // ABSENSI
     Route::middleware('auth')->group(function () {
 
         Route::post('/absensi/masuk', [AbsensiController::class, 'masuk'])
@@ -141,12 +153,14 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/absensi/keluar', [AbsensiController::class, 'keluar'])
             ->name('absensi.keluar');
+
     });
 
 
+
     // ======================================================
-// TEAM MANAGEMENT
-// ======================================================
+    // TEAM MANAGEMENT
+    // ======================================================
 
     Route::middleware(['auth'])
         ->prefix('hrd/team-management')
@@ -295,22 +309,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/laporan', [HRDController::class, 'laporan'])->name('laporan');
 
     });
-    /*
-    |--------------------------------------------------------------------------
-    | PROFILE
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/profile', [ProfileController::class, 'edit'])
-        ->name('profile.edit');
-
-
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
-
-
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
 
 
 });
